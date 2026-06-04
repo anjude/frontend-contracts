@@ -1,0 +1,734 @@
+openapi: 3.0.3
+info:
+  title: Topic API - 主题管理接口
+  description: |
+    主题管理相关接口，包括：
+    - 主题管理：创建、查询、更新、删除主题
+    - 主题记录：创建、查询、更新、删除主题记录，支持置顶功能
+
+    ## 主题类型枚举 (TopicType)
+    - 1: 原主题 (Topic)
+    - 2: 标的思考 (Stock)
+    - 3: 物品日志 (Item)
+    - 4: 用户反馈 (Feedback)
+    - 5: 最近任务 (RecentTask)
+    - 6: 实盘分享 (BeanFlow)
+    - 7: 公开分享 (PublicFlow)
+    - 8: 目标 (Goal)
+    - 9: 碳基空间用户反馈 (CarbonFeedback)
+    - 10: 碳基空间约定 (CarbonAgreement)
+    - 11: 碳基空间刻度 (CarbonScale)
+
+    ## 认证方式
+    所有接口需要在请求头中携带 JWT Token：
+    ```
+    Authorization: Bearer {your_jwt_token}
+    ```
+
+    ## 响应格式
+    所有接口遵循统一的响应格式：
+    ```json
+    {
+      "err_code": 0,
+      "msg": "success",
+      "detail": "",
+      "data": {}
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: Backend Superone API Support
+
+servers:
+  - url: /api/so
+    description: API 基础路径
+
+tags:
+  - name: Topic
+    description: 主题管理相关接口
+  - name: TopicLog
+    description: 主题记录相关接口
+
+paths:
+  /topic/list:
+    post:
+      tags:
+        - Topic
+      summary: 获取主题列表
+      description: 分页获取主题列表，支持关键词搜索，按置顶权重和更新时间排序
+      operationId: getTopicList
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetTopicListReq'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  offset: 0
+                  size: 20
+                  total: 100
+                  list:
+                    - id: 1
+                      openid: "account_xxx"
+                      topic_name: "主题名称"
+                      description: "主题描述"
+                      top: 0
+                      create_time: 1704067200
+                      update_time: 1704067200
+        '400':
+          description: 参数错误
+
+  /topic/detail:
+    get:
+      tags:
+        - Topic
+      summary: 获取主题详情
+      description: 根据主题ID获取详细信息
+      operationId: getTopicDetail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: 主题ID
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  openid: "account_xxx"
+                  topic_name: "主题名称"
+                  description: "主题描述"
+                  top: 0
+                  create_time: 1704067200
+                  update_time: 1704067200
+        '400':
+          description: 参数错误
+        '404':
+          description: 主题不存在
+
+  /topic/create:
+    post:
+      tags:
+        - Topic
+      summary: 创建主题
+      description: 创建新的主题
+      operationId: createTopic
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTopicReq'
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  openid: "account_xxx"
+                  topic_name: "新主题"
+                  description: "主题描述"
+                  top: 0
+                  create_time: 1704067200
+                  update_time: 1704067200
+        '400':
+          description: 参数错误
+
+  /topic/update:
+    post:
+      tags:
+        - Topic
+      summary: 更新主题
+      description: |
+        更新主题信息，支持部分更新。只有传递的字段才会更新。
+
+        置顶功能：
+        - 置顶主题：传入 `top` 字段，值为时间戳（如 `utils.GetTimeStamp()` 获取的值），数字越大越靠前
+        - 取消置顶：传入 `top: 0`
+        - 列表排序：置顶的主题会按 `top` 值降序排列，`top` 值越大越靠前
+      operationId: updateTopic
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTopicReq'
+            example:
+              id: 1
+              topic_name: "更新后的主题名称"
+              top: 1704067200
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  openid: "account_xxx"
+                  topic_name: "更新后的主题名称"
+                  description: "主题描述"
+                  top: 1704067200
+                  create_time: 1704067200
+                  update_time: 1704067200
+        '400':
+          description: 参数错误
+        '404':
+          description: 主题不存在
+
+  /topic/delete:
+    post:
+      tags:
+        - Topic
+      summary: 删除主题
+      description: 删除指定的主题（会级联删除该主题下的所有日志）
+      operationId: deleteTopic
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteTopicReq'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data: null
+        '400':
+          description: 参数错误
+        '404':
+          description: 主题不存在
+
+  /topic/log/list:
+    post:
+      tags:
+        - TopicLog
+      summary: 获取主题记录列表
+      description: |
+        分页获取主题记录列表，支持按多个主题ID和主题类型筛选。
+
+        排序规则：按 `top DESC, create_time DESC` 排序，置顶的日志会排在前面。
+      operationId: getTopicLogList
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetTopicLogListReq'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  offset: 0
+                  size: 20
+                  total: 100
+                  list:
+                    - id: 1
+                      openid: "account_xxx"
+                      topic_type: 1
+                      topic_id: 123
+                      content: "日志内容"
+                      preview: "日志内容预览..."
+                      extra_data: null
+                      mark: 1
+                      top: 0
+                      create_time: 1704067200
+                      update_time: 1704067200
+        '400':
+          description: 参数错误
+
+  /topic/log/detail:
+    get:
+      tags:
+        - TopicLog
+      summary: 获取主题记录详情
+      description: 根据日志ID获取详细信息
+      operationId: getTopicLogDetail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: 日志ID
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  openid: "account_xxx"
+                  topic_type: 1
+                  topic_id: 123
+                  content: "日志内容"
+                  extra_data: null
+                  mark: 1
+                  top: 0
+                  create_time: 1704067200
+                  update_time: 1704067200
+        '400':
+          description: 参数错误
+        '404':
+          description: 日志不存在
+
+  /topic/log/create:
+    post:
+      tags:
+        - TopicLog
+      summary: 创建主题记录
+      description: 创建新的主题记录
+      operationId: createTopicLog
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTopicLogReq'
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  openid: "account_xxx"
+                  topic_type: 1
+                  topic_id: 123
+                  content: "日志内容"
+                  extra_data: null
+                  mark: 1
+                  create_time: 1704067200
+                  update_time: 1704067200
+        '400':
+          description: 参数错误
+
+  /topic/log/update:
+    post:
+      tags:
+        - TopicLog
+      summary: 更新主题记录
+      description: |
+        更新主题记录信息，支持部分更新。只有传递的字段才会更新。
+
+        **置顶功能**：
+        - 置顶日志：传入 `top` 字段，值为时间戳（如 `utils.GetTimeStamp()` 获取的值），数字越大越靠前
+        - 取消置顶：传入 `top: 0`
+        - 列表排序：置顶的日志会按 `top` 值降序排列，`top` 值越大越靠前
+
+        示例：
+        - 只更新内容: `{"id": 1, "content": "新内容"}`
+        - 只更新扩展数据: `{"id": 1, "extra_data": {"feedback_answer": "答案"}}`
+        - 更新多个字段: `{"id": 1, "content": "新内容", "extra_data": {"feedback_answer": "答案"}}`
+        - 更新标记位: `{"id": 1, "mark": 1}`
+        - 更新主题ID: `{"id": 1, "topic_id": 2}`
+        - 置顶日志: `{"id": 1, "top": 1704067200}` (传入当前时间戳)
+        - 取消置顶: `{"id": 1, "top": 0}`
+      operationId: updateTopicLog
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTopicLogReq'
+            example:
+              id: 1
+              top: 1704067200
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  openid: "account_xxx"
+                  topic_type: 1
+                  topic_id: 123
+                  content: "更新后的内容"
+                  extra_data: null
+                  mark: 1
+                  top: 1704067200
+                  create_time: 1704067200
+                  update_time: 1704067200
+        '400':
+          description: 参数错误
+        '404':
+          description: 日志不存在
+
+  /topic/log/delete:
+    post:
+      tags:
+        - TopicLog
+      summary: 删除主题记录
+      description: 删除指定的主题记录
+      operationId: deleteTopicLog
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteTopicLogReq'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data: null
+        '400':
+          description: 参数错误
+        '404':
+          description: 日志不存在
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    StandardResponse:
+      type: object
+      properties:
+        err_code:
+          type: integer
+          description: 错误码，0表示成功
+        msg:
+          type: string
+          description: 响应消息
+        detail:
+          type: string
+          description: 详细信息
+        data:
+          type: object
+          description: 响应数据
+
+    GetTopicListReq:
+      type: object
+      properties:
+        offset:
+          type: integer
+          description: 偏移量，默认0
+          default: 0
+        size:
+          type: integer
+          description: 每页大小，默认20，最大100
+          default: 20
+          maximum: 100
+        keyword:
+          type: string
+          description: 搜索关键词（可选）
+
+    GetTopicDetailReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 主题ID
+
+    CreateTopicReq:
+      type: object
+      required:
+        - topic_name
+      properties:
+        topic_name:
+          type: string
+          description: 主题名称
+          maxLength: 50
+        description:
+          type: string
+          description: 主题描述
+          maxLength: 2000
+
+    UpdateTopicReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 主题ID
+        topic_name:
+          type: string
+          description: 主题名称（可选）
+          maxLength: 50
+        description:
+          type: string
+          description: 主题描述（可选）
+          maxLength: 2000
+        top:
+          type: integer
+          format: int32
+          description: 置顶权重（传入时间戳实现置顶，传入0取消置顶）
+
+    DeleteTopicReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 主题ID
+
+    GetTopicLogListReq:
+      type: object
+      required:
+        - topic_ids
+        - topic_types
+      properties:
+        topic_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+          description: 主题ID列表，至少1个
+          minItems: 1
+        topic_types:
+          type: array
+          items:
+            type: integer
+            enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+          description: |
+            主题类型列表，至少1个。枚举值：
+            - 1: 原主题 (Topic)
+            - 2: 标的思考 (Stock)
+            - 3: 物品日志 (Item)
+            - 4: 用户反馈 (Feedback)
+            - 5: 最近任务 (RecentTask)
+            - 6: 实盘分享 (BeanFlow)
+            - 7: 公开分享 (PublicFlow)
+            - 8: 目标 (Goal)
+            - 9: 碳基空间用户反馈 (CarbonFeedback)
+            - 10: 碳基空间约定 (CarbonAgreement)
+            - 11: 碳基空间刻度 (CarbonScale)
+          minItems: 1
+        offset:
+          type: integer
+          description: 偏移量，默认0
+          default: 0
+        size:
+          type: integer
+          description: 每页大小，默认20，最大100
+          default: 20
+          maximum: 100
+
+    GetTopicLogDetailReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 日志ID
+
+    CreateTopicLogReq:
+      type: object
+      required:
+        - topic_type
+        - topic_id
+      properties:
+        topic_type:
+          type: integer
+          description: |
+            主题类型，枚举值：
+            - 1: 原主题 (Topic)
+            - 2: 标的思考 (Stock)
+            - 3: 物品日志 (Item)
+            - 4: 用户反馈 (Feedback)
+            - 5: 最近任务 (RecentTask)
+            - 6: 实盘分享 (BeanFlow)
+            - 7: 公开分享 (PublicFlow)
+            - 8: 目标 (Goal)
+            - 9: 碳基空间用户反馈 (CarbonFeedback)
+            - 10: 碳基空间约定 (CarbonAgreement)
+            - 11: 碳基空间刻度 (CarbonScale)
+          enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        topic_id:
+          type: integer
+          format: int64
+          description: 主题ID
+        content:
+          type: string
+          description: 日志内容；与 extra_data.image_urls 至少传一个
+          maxLength: 10000
+        extra_data:
+          type: object
+          properties:
+            image_urls:
+              type: array
+              items:
+                type: string
+              description: 问题图片 URL 列表
+            feedback_answer:
+              type: string
+              description: 反馈答案（用于用户反馈类型）
+            feedback_answer_image_urls:
+              type: array
+              items:
+                type: string
+              description: 反馈答案图片 URL 列表
+            answer:
+              type: string
+              description: 答案（用于其他类型）
+          description: 扩展数据（可选）
+        mark:
+          type: integer
+          format: int64
+          description: 标记位（可选，不传则使用默认值）
+
+    UpdateTopicLogReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 日志ID
+        topic_id:
+          type: integer
+          format: int64
+          description: 主题ID（可选）
+          minimum: 1
+        content:
+          type: string
+          description: 日志内容（可选）
+          maxLength: 10000
+        extra_data:
+          type: object
+          properties:
+            image_urls:
+              type: array
+              items:
+                type: string
+              description: 问题图片 URL 列表
+            feedback_answer:
+              type: string
+              description: 反馈答案（用于用户反馈类型）
+            feedback_answer_image_urls:
+              type: array
+              items:
+                type: string
+              description: 反馈答案图片 URL 列表
+            answer:
+              type: string
+              description: 答案（用于其他类型）
+          description: 扩展数据（可选）
+        mark:
+          type: integer
+          format: int64
+          description: 标记位（可选）
+        top:
+          type: integer
+          format: int32
+          description: 置顶权重（传入时间戳实现置顶，传入0取消置顶）
+
+    DeleteTopicLogReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 日志ID

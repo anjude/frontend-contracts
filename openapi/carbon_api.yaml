@@ -1,0 +1,895 @@
+openapi: 3.0.3
+info:
+  title: Carbon Space API
+  version: 1.0.0
+servers:
+  - url: /api/so
+tags:
+  - name: Carbon
+paths:
+  /carbon/space/current:
+    get:
+      tags: [Carbon]
+      summary: 获取当前默认空间
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCurrentSpaceResp'
+  /carbon/space/list:
+    post:
+      tags: [Carbon]
+      summary: 获取我的空间列表
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PageReq'
+      responses:
+        '200':
+          description: success
+  /carbon/space/create:
+    post:
+      tags: [Carbon]
+      summary: 创建空间
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSpaceReq'
+      responses:
+        '200':
+          description: success
+  /carbon/space/update:
+    post:
+      tags: [Carbon]
+      summary: 编辑空间
+      description: 仅空间创建者可编辑空间名称。
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSpaceReq'
+      responses:
+        '200':
+          description: success
+  /carbon/space/delete:
+    post:
+      tags: [Carbon]
+      summary: 删除空间
+      description: 仅空间创建者可删除；删除后立即硬删除空间、成员、邀请、此刻等相关数据。
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteSpaceReq'
+      responses:
+        '200':
+          description: success
+  /carbon/space/default/set:
+    post:
+      tags: [Carbon]
+      summary: 设置默认空间
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetDefaultSpaceReq'
+      responses:
+        '200':
+          description: success
+  /carbon/space/detail:
+    get:
+      tags: [Carbon]
+      summary: 获取空间详情
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: space_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCurrentSpaceResp'
+  /carbon/invite/create:
+    post:
+      tags: [Carbon]
+      summary: 创建邀请
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpaceIDReq'
+      responses:
+        '200':
+          description: success
+  /carbon/invite/detail:
+    get:
+      tags: [Carbon]
+      summary: 获取邀请详情
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: invite_code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: space_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: inviter_openid
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: success
+  /carbon/invite/accept:
+    post:
+      tags: [Carbon]
+      summary: 接受邀请
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptInviteReq'
+      responses:
+        '200':
+          description: success
+  /carbon/moment/list:
+    post:
+      tags: [Carbon]
+      summary: 获取此刻列表
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MomentListReq'
+      responses:
+        '200':
+          description: success
+  /carbon/moment/create:
+    post:
+      tags: [Carbon]
+      summary: 创建此刻
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMomentReq'
+      responses:
+        '200':
+          description: success
+  /carbon/moment/delete:
+    post:
+      tags: [Carbon]
+      summary: 删除此刻
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteMomentReq'
+      responses:
+        '200':
+          description: success
+  /carbon/moment/react:
+    post:
+      tags: [Carbon]
+      summary: 给此刻添加或取消表情回应
+      description: 当前用户在同一条此刻上仅保留一个回应；传空 emoji 表示取消自己当前的回应。
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactMomentReq'
+      responses:
+        '200':
+          description: success
+  /carbon/agreement/list:
+    post:
+      tags: [Carbon]
+      summary: 获取约定列表
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgreementListReq'
+      responses:
+        '200':
+          description: success
+  /carbon/agreement/create:
+    post:
+      tags: [Carbon]
+      summary: 创建约定
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAgreementReq'
+      responses:
+        '200':
+          description: success
+  /carbon/agreement/detail:
+    get:
+      tags: [Carbon]
+      summary: 获取约定详情
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: agreement_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: success
+  /carbon/agreement/update:
+    post:
+      tags: [Carbon]
+      summary: 更新约定标题和内容
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAgreementReq'
+      responses:
+        '200':
+          description: success
+  /carbon/agreement/read:
+    post:
+      tags: [Carbon]
+      summary: 清除当前用户的约定留言未读状态
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgreementIDReq'
+      responses:
+        '200':
+          description: success
+  /carbon/agreement/agree:
+    post:
+      tags: [Carbon]
+      summary: 同意约定
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgreementIDReq'
+      responses:
+        '200':
+          description: success
+  /carbon/agreement/start:
+    post:
+      tags: [Carbon]
+      summary: 开始约定
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgreementIDReq'
+      responses:
+        '200':
+          description: success
+  /carbon/agreement/complete:
+    post:
+      tags: [Carbon]
+      summary: 完成约定
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgreementIDReq'
+      responses:
+        '200':
+          description: success
+  /carbon/agreement/pause:
+    post:
+      tags: [Carbon]
+      summary: 搁置约定
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgreementIDReq'
+      responses:
+        '200':
+          description: success
+  /carbon/agreement/resume:
+    post:
+      tags: [Carbon]
+      summary: 重新推进约定
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgreementIDReq'
+      responses:
+        '200':
+          description: success
+  /carbon/agreement/delete:
+    post:
+      tags: [Carbon]
+      summary: 删除约定
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgreementIDReq'
+      responses:
+        '200':
+          description: success
+  /carbon/scale/list:
+    post:
+      tags: [Carbon]
+      summary: 获取刻度列表
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScaleListReq'
+      responses:
+        '200':
+          description: success
+  /carbon/scale/create:
+    post:
+      tags: [Carbon]
+      summary: 创建刻度
+      description: 支持手动创建，或通过 source_type/source_id 从约定、此刻一键生成。
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateScaleReq'
+      responses:
+        '200':
+          description: success
+  /carbon/scale/detail:
+    get:
+      tags: [Carbon]
+      summary: 获取刻度详情
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: space_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: source_type
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [1, 2, 3]
+        - name: source_id
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: success
+  /carbon/scale/update:
+    post:
+      tags: [Carbon]
+      summary: 更新刻度
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateScaleReq'
+      responses:
+        '200':
+          description: success
+  /carbon/scale/delete:
+    post:
+      tags: [Carbon]
+      summary: 删除刻度
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteScaleReq'
+      responses:
+        '200':
+          description: success
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    PageReq:
+      type: object
+      properties:
+        offset:
+          type: integer
+        size:
+          type: integer
+    UserLiteView:
+      type: object
+      properties:
+        openid:
+          type: string
+        nick_name:
+          type: string
+        avatar_url:
+          type: string
+    SpaceView:
+      type: object
+      properties:
+        id:
+          type: integer
+        creator_openid:
+          type: string
+        name:
+          type: string
+        status:
+          type: integer
+        member_count:
+          type: integer
+        create_time:
+          type: integer
+        update_time:
+          type: integer
+    MemberView:
+      type: object
+      properties:
+        id:
+          type: integer
+        space_id:
+          type: integer
+        openid:
+          type: string
+        role:
+          type: integer
+        status:
+          type: integer
+        is_default:
+          type: integer
+        joined_at:
+          type: integer
+        last_visit_time:
+          type: integer
+        create_time:
+          type: integer
+        update_time:
+          type: integer
+    MomentView:
+      type: object
+      properties:
+        id:
+          type: integer
+        space_id:
+          type: integer
+        openid:
+          type: string
+        emoji:
+          type: string
+        content:
+          type: string
+        image_urls:
+          type: array
+          items:
+            type: string
+        reactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MomentReactionView'
+        status:
+          type: integer
+        create_time:
+          type: integer
+        update_time:
+          type: integer
+    MomentReactionView:
+      type: object
+      properties:
+        openid:
+          type: string
+        emoji:
+          type: string
+    GetCurrentSpaceResp:
+      type: object
+      properties:
+        has_space:
+          type: boolean
+        space:
+          $ref: '#/components/schemas/SpaceView'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberView'
+        recent_moments:
+          type: array
+          items:
+            $ref: '#/components/schemas/MomentView'
+        recent_agreements:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgreementView'
+        recent_scales:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScaleView'
+        spark_status:
+          $ref: '#/components/schemas/SparkStatusView'
+    SparkStatusView:
+      type: object
+      properties:
+        level:
+          type: integer
+          description: 当前火花等级
+        level_name:
+          type: string
+          description: 当前火花等级名称
+        score:
+          type: integer
+          description: 火花成长值
+        next_level_score:
+          type: integer
+          description: 下一等级所需成长值，满级为0
+        streak_days:
+          type: integer
+          description: 当前连续续火花天数
+        longest_streak_days:
+          type: integer
+          description: 历史最长连续续火花天数
+        success_today:
+          type: boolean
+          description: 两名空间成员当天都访问空间时为 true
+        badge_text:
+          type: string
+          description: 胶囊中间展示的简略文字，例如 Lv3 已续、Lv3 待续
+        badge_icon:
+          type: string
+          description: 胶囊图标语义，例如 spark_done、spark_wait、spark_risk
+        badge_color:
+          type: string
+          description: 胶囊建议色值
+        badge_tone:
+          type: string
+          enum: [success, warning, danger, neutral]
+          description: 胶囊状态色语义
+        last_success_date:
+          type: string
+          description: 最近一次续火花成功日期，格式 YYYY-MM-DD
+        missed_days:
+          type: integer
+          description: 距最近成功已间隔天数
+        days_until_degrade:
+          type: integer
+          description: 距离触发降级还有几天，0 表示已到风险态
+        degrade_after_days:
+          type: integer
+          description: 超过多少天未成功续火花会降级
+    CreateSpaceReq:
+      type: object
+      properties:
+        name:
+          type: string
+    UpdateSpaceReq:
+      type: object
+      required: [space_id, name]
+      properties:
+        space_id:
+          type: integer
+        name:
+          type: string
+    DeleteSpaceReq:
+      type: object
+      required: [space_id]
+      properties:
+        space_id:
+          type: integer
+    SetDefaultSpaceReq:
+      type: object
+      required: [space_id]
+      properties:
+        space_id:
+          type: integer
+    SpaceIDReq:
+      type: object
+      required: [space_id]
+      properties:
+        space_id:
+          type: integer
+    AcceptInviteReq:
+      type: object
+      required: [invite_code]
+      properties:
+        invite_code:
+          type: string
+          pattern: '^[0-9]{6}$'
+          description: 6位数字邀请码
+        space_id:
+          type: integer
+          description: 可选，兼容普通分享链接场景；二维码短码场景可不传
+        inviter_openid:
+          type: string
+          description: 可选，兼容普通分享链接场景；二维码短码场景可不传
+    MomentListReq:
+      type: object
+      required: [space_id]
+      properties:
+        space_id:
+          type: integer
+        offset:
+          type: integer
+        size:
+          type: integer
+    CreateMomentReq:
+      type: object
+      required: [space_id, emoji]
+      properties:
+        space_id:
+          type: integer
+        emoji:
+          type: string
+        content:
+          type: string
+        image_urls:
+          type: array
+          maxItems: 9
+          description: 此刻图片URL列表，可与content同时为空
+          items:
+            type: string
+    DeleteMomentReq:
+      type: object
+      required: [moment_id]
+      properties:
+        moment_id:
+          type: integer
+    ReactMomentReq:
+      type: object
+      required: [moment_id]
+      properties:
+        moment_id:
+          type: integer
+        emoji:
+          type: string
+          description: 不传或传空表示取消当前用户在该此刻上的回应
+    AgreementView:
+      type: object
+      properties:
+        id:
+          type: integer
+        space_id:
+          type: integer
+        creator_openid:
+          type: string
+        title:
+          type: string
+        note:
+          type: string
+        status:
+          type: integer
+          enum: [1, 2, 3, 4, 5]
+          description: 1-pending 2-agreed 3-doing 4-done 5-paused
+        status_text:
+          type: string
+        agreed_by_openid:
+          type: string
+        creator:
+          $ref: '#/components/schemas/UserLiteView'
+        agreed_by:
+          $ref: '#/components/schemas/UserLiteView'
+        agreed_time:
+          type: integer
+        started_time:
+          type: integer
+        completed_time:
+          type: integer
+        target_time:
+          type: integer
+        has_unread_log:
+          type: boolean
+        create_time:
+          type: integer
+        update_time:
+          type: integer
+    AgreementListReq:
+      type: object
+      required: [space_id]
+      properties:
+        space_id:
+          type: integer
+        offset:
+          type: integer
+        size:
+          type: integer
+    CreateAgreementReq:
+      type: object
+      required: [space_id, title]
+      properties:
+        space_id:
+          type: integer
+        title:
+          type: string
+          maxLength: 40
+        note:
+          type: string
+          maxLength: 120
+    UpdateAgreementReq:
+      type: object
+      required: [agreement_id, title]
+      properties:
+        agreement_id:
+          type: integer
+        title:
+          type: string
+          maxLength: 40
+        note:
+          type: string
+          maxLength: 120
+    AgreementIDReq:
+      type: object
+      required: [agreement_id]
+      properties:
+        agreement_id:
+          type: integer
+    ScaleView:
+      type: object
+      properties:
+        id:
+          type: integer
+        space_id:
+          type: integer
+        creator_openid:
+          type: string
+        title:
+          type: string
+        date:
+          type: string
+          description: YYYY-MM-DD
+        note:
+          type: string
+        image_urls:
+          type: array
+          items:
+            type: string
+        source_type:
+          type: integer
+          enum: [1, 2, 3]
+          description: 1-manual 2-agreement 3-moment
+        source_id:
+          type: integer
+        creator:
+          $ref: '#/components/schemas/UserLiteView'
+        create_time:
+          type: integer
+        update_time:
+          type: integer
+    ScaleListReq:
+      type: object
+      required: [space_id]
+      properties:
+        space_id:
+          type: integer
+        offset:
+          type: integer
+        size:
+          type: integer
+    CreateScaleReq:
+      type: object
+      required: [space_id]
+      properties:
+        space_id:
+          type: integer
+        title:
+          type: string
+          maxLength: 40
+        date:
+          type: string
+          description: YYYY-MM-DD
+        note:
+          type: string
+          maxLength: 200
+        image_urls:
+          type: array
+          maxItems: 9
+          items:
+            type: string
+        source_type:
+          type: integer
+          enum: [1, 2, 3]
+        source_id:
+          type: integer
+    UpdateScaleReq:
+      type: object
+      required: [id, title, date]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          maxLength: 40
+        date:
+          type: string
+          description: YYYY-MM-DD
+        note:
+          type: string
+          maxLength: 200
+        image_urls:
+          type: array
+          maxItems: 9
+          items:
+            type: string
+    DeleteScaleReq:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: integer
