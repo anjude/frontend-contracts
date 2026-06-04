@@ -1,9 +1,7 @@
+import type { ExecutionMode, ExecutionStatus } from '../enums/checklist'
 import type { PaginationData } from './base'
 
 export namespace ChecklistApi {
-  export type ExecutionMode = 0 | 1
-  export type ExecutionStatus = 0 | 1
-
   export interface ChecklistExecutionStepEntity {
     itemId: number
     summaryMd: string

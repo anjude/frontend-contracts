@@ -1,8 +1,7 @@
+import type { StockType } from '../enums/stock'
 import type { PaginationData } from './base'
 
 export namespace StockApi {
-  export type StockType = 1 | 2 | 3 | 4 | 5
-
   export interface StockListItem {
     id: number
     openid: string

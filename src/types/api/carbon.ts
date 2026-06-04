@@ -1,3 +1,11 @@
+import type {
+  CarbonAgreementStatus,
+  CarbonMomentStatus,
+  CarbonScaleSourceType,
+  CarbonSparkBadgeTone,
+  CarbonSpaceMemberRole,
+  CarbonSpaceStatus,
+} from '../enums/carbon'
 export namespace CarbonApi {
   export interface UserLiteView {
     openid: string
@@ -9,7 +17,7 @@ export namespace CarbonApi {
     id: number
     creatorOpenid: string
     name: string
-    status: number
+    status: CarbonSpaceStatus
     memberCount: number
     extraData?: Record<string, unknown>
     createTime: number
@@ -20,7 +28,7 @@ export namespace CarbonApi {
     id: number
     spaceId: number
     openid: string
-    role: number
+    role: CarbonSpaceMemberRole
     status: number
     isDefault: number
     joinedAt: number
@@ -43,7 +51,7 @@ export namespace CarbonApi {
     content: string
     imageUrls: string[]
     reactions: MomentReactionView[]
-    status: number
+    status: CarbonMomentStatus
     user?: UserLiteView | null
     createTime: number
     updateTime: number
@@ -55,7 +63,7 @@ export namespace CarbonApi {
     creatorOpenid: string
     title: string
     note: string
-    status: 1 | 2 | 3 | 4 | 5
+    status: CarbonAgreementStatus
     statusText: string
     agreedByOpenid: string
     creator?: UserLiteView | null
@@ -77,7 +85,7 @@ export namespace CarbonApi {
     date: string
     note: string
     imageUrls: string[]
-    sourceType: 1 | 2 | 3
+    sourceType: CarbonScaleSourceType
     sourceId: number
     creator?: UserLiteView | null
     createTime: number
@@ -103,7 +111,7 @@ export namespace CarbonApi {
     badgeText: string
     badgeIcon: string
     badgeColor: string
-    badgeTone: 'success' | 'warning' | 'danger' | 'neutral'
+    badgeTone: CarbonSparkBadgeTone
     lastSuccessDate: string
     missedDays: number
     daysUntilDegrade: number
@@ -324,7 +332,7 @@ export namespace CarbonApi {
     date?: string
     note?: string
     imageUrls?: string[]
-    sourceType?: 1 | 2 | 3
+    sourceType?: CarbonScaleSourceType
     sourceId?: number
   }
 

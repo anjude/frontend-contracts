@@ -1,10 +1,7 @@
+import type { LoginType, SubscribeMsgType } from '../enums/user'
 import type { PaginationData } from './base'
 
 export namespace UserApi {
-  export type LoginType = 1 | 2 | 3 | 4 | 5
-  export type VerifyType = 0 | 1 | 2
-  export type SubscribeMsgType = 1 | 2
-
   export interface UserInfoView {
     openid: string
     admin: 0 | 1

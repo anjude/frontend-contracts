@@ -1,6 +1,5 @@
+import type { HotDataPlatform } from '../enums/common'
 export namespace CommonApi {
-  export type HotDataPlatform = 1 | 2 | 3 | 4
-
   export interface AutoReplyReq {
     toUserName: string
     fromUserName: string

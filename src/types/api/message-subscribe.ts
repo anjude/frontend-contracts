@@ -1,8 +1,7 @@
+import type { MessageType } from '../enums/message-subscribe'
 import type { PaginationData } from './base'
 
 export namespace MessageSubscribeApi {
-  export type MessageType = 1 | 2
-
   export interface MessageSubscribe {
     id: number
     openid: string

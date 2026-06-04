@@ -1,3 +1,4 @@
+import type { TopicLogMark, TopicType } from '../enums/topic'
 export namespace TopicApi {
   export interface TopicListItem {
     id: number
@@ -21,12 +22,12 @@ export namespace TopicApi {
   export interface TopicLogListItem {
     id: number
     openid: string
-    topicType: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11
+    topicType: TopicType
     topicId: number
     content: string
     preview: string
     extraData?: TopicLogExtraData
-    mark: number
+    mark: TopicLogMark
     top: number
     createTime: number
     updateTime: number
@@ -35,11 +36,11 @@ export namespace TopicApi {
   export interface TopicLogDetailView {
     id: number
     openid: string
-    topicType: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11
+    topicType: TopicType
     topicId: number
     content: string
     extraData?: TopicLogExtraData
-    mark: number
+    mark: TopicLogMark
     top: number
     createTime: number
     updateTime: number
@@ -88,7 +89,7 @@ export namespace TopicApi {
 
   export interface GetTopicLogListReq {
     topicIds: number[]
-    topicTypes: Array<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11>
+    topicTypes: TopicType[]
     offset?: number
     size?: number
   }
@@ -107,21 +108,21 @@ export namespace TopicApi {
   export interface GetTopicLogDetailResp extends TopicLogDetailView {}
 
   export interface CreateTopicLogReq {
-    topicType: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11
+    topicType: TopicType
     topicId: number
     content?: string
     extraData?: TopicLogExtraData
-    mark?: number
+    mark?: TopicLogMark
   }
 
   export interface CreateTopicLogResp {
     id: number
     openid: string
-    topicType: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11
+    topicType: TopicType
     topicId: number
     content: string
     extraData?: TopicLogExtraData
-    mark: number
+    mark: TopicLogMark
     createTime: number
     updateTime: number
   }
@@ -131,7 +132,7 @@ export namespace TopicApi {
     topicId?: number
     content?: string
     extraData?: TopicLogExtraData
-    mark?: number
+    mark?: TopicLogMark
     top?: number
   }
 

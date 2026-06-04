@@ -1,10 +1,8 @@
+import type { TripStatus, PlanTripStreamV2Type } from '../enums/trip'
 import type { PaginationData } from './base'
 import type { AddressApi } from './address'
 
 export namespace TripApi {
-  export type TripStatus = 1 | 2 | 3 | 4
-  export type PlanTripStreamV2Type = 1 | 2
-
   export interface TravelPreference {
     type?: string
     content?: string

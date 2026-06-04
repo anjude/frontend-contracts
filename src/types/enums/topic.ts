@@ -11,7 +11,9 @@ export const TopicType = {
   CarbonAgreement: 10,
   CarbonScale: 11,
 } as const
+export type TopicType = (typeof TopicType)[keyof typeof TopicType]
 
 export const TopicLogMark = {
   Normal: 1,
 } as const
+export type TopicLogMark = (typeof TopicLogMark)[keyof typeof TopicLogMark]

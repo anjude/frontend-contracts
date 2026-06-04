@@ -1,9 +1,7 @@
+import type { AddressLevel, SpotCategory } from '../enums/address'
 import type { PaginationData } from './base'
 
 export namespace AddressApi {
-  export type AddressLevel = 1 | 2 | 3 | 4
-  export type SpotCategory = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 99
-
   export interface AddressListItem {
     id: number
     parentCode: string
