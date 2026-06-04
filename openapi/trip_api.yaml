@@ -1,0 +1,1591 @@
+openapi: 3.0.3
+info:
+  title: Trip API - 行程管理接口
+  description: |
+    行程管理相关接口，包括：
+    - 行程管理：创建、更新、删除、查询和列表行程信息
+    - 智能规划行程：使用 AI 智能规划行程（流式返回）
+      - V1: 使用文心一言，返回景点ID和详细信息
+      - V2: 使用 Coze workflow，直接返回规划数据（思考内容和景点信息）
+    - 行程地点管理：创建、更新、删除、查询和批量更新排序行程地点信息
+    
+    ## 认证方式
+    所有接口都需要在请求头中携带 JWT Token：
+    ```
+    Authorization: Bearer {your_jwt_token}
+    ```
+    
+    ## 响应格式
+    所有接口遵循统一的响应格式：
+    ```json
+    {
+      "err_code": 0,
+      "msg": "success",
+      "detail": "",
+      "data": {}
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: Backend Superone API Support
+
+servers:
+  - url: /api/so
+    description: API 基础路径
+
+tags:
+  - name: Trip
+    description: 行程管理相关接口
+  - name: TripSpot
+    description: 行程地点管理相关接口
+
+paths:
+  /trip/create:
+    post:
+      tags:
+        - Trip
+      summary: 创建行程
+      description: |
+        创建新的行程，包括行程名称、目的地、时间、天数等信息。
+        用户只能创建自己的行程。
+        
+        可选参数 `spots` 允许在创建行程时同时创建多个行程地点，通过一个接口完成完整的行程规划保存。
+        如果提供了 `spots`，系统会在事务中同时创建行程和所有地点，确保原子性。
+      operationId: createTrip
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTripReq'
+            example:
+              name: "北京三日游"
+              address_code: "110000"
+              start_time: 1704067200
+              end_time: 1704153600
+              day_count: 3
+              travel_preference:
+                type: "文化"
+                content: "喜欢历史文化景点"
+              status: 1
+              top: 0
+              spots:
+                - spot_id: 100
+                  spot_name: "天安门广场"
+                  description: "位于北京市中心的天安门广场"
+                  day_number: 1
+                  sort_order: 1
+                  visit_time: 1704067200
+                  notes: "建议早上参观"
+                - spot_name: "故宫博物院"
+                  description: "明清两朝的皇家宫殿"
+                  day_number: 1
+                  sort_order: 2
+                  notes: "需要提前预约"
+                - spot_name: "颐和园"
+                  description: "中国古典园林之首"
+                  day_number: 2
+                  notes: "下午游览"
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  trip:
+                    id: 1
+                    openid: "user_openid_123"
+                    name: "北京三日游"
+                    address_code: "110000"
+                    start_time: 1704067200
+                    end_time: 1704153600
+                    day_count: 3
+                    travel_preference:
+                      type: "文化"
+                      content: "喜欢历史文化景点"
+                    status: 1
+                    top: 0
+                    create_time: 1704067200
+                    update_time: 1704067200
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                err_code: -100001
+                msg: "param error"
+                detail: "行程名称不能为空"
+                data: null
+
+  /trip/update:
+    post:
+      tags:
+        - Trip
+      summary: 更新行程
+      description: |
+        更新行程信息，支持部分字段更新（只有非 nil 的字段才会更新）。
+        用户只能更新自己的行程。
+      operationId: updateTrip
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTripReq'
+            example:
+              id: 1
+              name: "北京三日游（更新）"
+              status: 2
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  trip:
+                    id: 1
+                    openid: "user_openid_123"
+                    name: "北京三日游（更新）"
+                    address_code: "110000"
+                    start_time: 1704067200
+                    end_time: 1704153600
+                    day_count: 3
+                    travel_preference:
+                      type: "文化"
+                      content: "喜欢历史文化景点"
+                    status: 2
+                    top: 0
+                    create_time: 1704067200
+                    update_time: 1704153600
+        '400':
+          description: 参数错误
+        '404':
+          description: 行程不存在
+        '403':
+          description: 无权访问该行程
+
+  /trip/delete:
+    post:
+      tags:
+        - Trip
+      summary: 删除行程
+      description: 删除行程，用户只能删除自己的行程
+      operationId: deleteTrip
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteTripReq'
+            example:
+              id: 1
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  success: true
+        '404':
+          description: 行程不存在
+        '403':
+          description: 无权访问该行程
+
+  /trip/detail:
+    get:
+      tags:
+        - Trip
+      summary: 获取行程详情
+      description: 根据行程ID获取行程的详细信息
+      operationId: getTripDetail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: 行程ID
+          example: 1
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  trip:
+                    id: 1
+                    openid: "user_openid_123"
+                    name: "北京三日游"
+                    address_code: "110000"
+                    start_time: 1704067200
+                    end_time: 1704153600
+                    day_count: 3
+                    travel_preference:
+                      type: "文化"
+                      content: "喜欢历史文化景点"
+                    status: 1
+                    top: 0
+                    create_time: 1704067200
+                    update_time: 1704067200
+        '404':
+          description: 行程不存在
+        '403':
+          description: 无权访问该行程
+
+  /trip/list:
+    post:
+      tags:
+        - Trip
+      summary: 获取行程列表
+      description: |
+        获取当前用户的行程列表，支持按状态过滤。
+        列表按置顶权重和创建时间倒序排列。
+      operationId: getTripList
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetTripListReq'
+            example:
+              status: 1
+              offset: 0
+              size: 20
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  offset: 0
+                  size: 20
+                  total: 1
+                  list:
+                    - id: 1
+                      name: "北京三日游"
+                      address_code: "110000"
+                      start_time: 1704067200
+                      end_time: 1704153600
+                      day_count: 3
+                      status: 1
+                      top: 0
+                      create_time: 1704067200
+                      update_time: 1704067200
+
+  /trip/plan/stream:
+    get:
+      tags:
+        - Trip
+      summary: 智能规划行程（流式返回）
+      description: |
+        根据目的地、天数、可用景点列表和旅行偏好，使用 AI 智能规划行程。
+        接口采用 Server-Sent Events (SSE) 流式返回规划结果，实时返回每个景点的规划信息。
+        
+        ## 流式响应格式
+        响应头：
+        - Content-Type: text/event-stream
+        - Cache-Control: no-cache
+        - Connection: keep-alive
+        
+        数据格式（每行一个事件）：
+        ```
+        event: spot
+        data: {"day_number":1,"spot_id":123,"spot":{...}}
+        
+        event: spot
+        data: {"day_number":1,"spot_id":456,"spot":{...}}
+        
+        event: error
+        data: 错误信息
+        ```
+      operationId: planTripStream
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: address_code
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 32
+          description: 目的地地址代码（必填）
+          example: "110000"
+        - name: day_count
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 30
+          description: 行程天数（必填）
+          example: 3
+        - name: travel_preference
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 旅行偏好（JSON 字符串，可选）
+          example: '{"type":"文化","content":"喜欢历史文化景点"}'
+      responses:
+        '200':
+          description: 流式返回成功
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                event: spot
+                data: {"day_number":1,"spot_id":123,"spot":{"id":123,"name":"天安门广场","description":"位于北京市中心"}}
+                
+                event: spot
+                data: {"day_number":1,"spot_id":456,"spot":{"id":456,"name":"故宫博物院","description":"明清两朝的皇家宫殿"}}
+                
+                event: spot
+                data: {"day_number":2,"spot_id":789,"spot":{"id":789,"name":"颐和园","description":"中国古典园林之首"}}
+        '400':
+          description: 参数错误
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                event: error
+                data: 查询地址信息失败
+        '500':
+          description: 服务器错误
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                event: error
+                data: 未找到可用景点
+
+  /trip/plan/stream/v2:
+    get:
+      tags:
+        - Trip
+      summary: 智能规划行程（流式返回 V2，使用 Coze workflow）
+      description: |
+        根据目的地、天数和旅行偏好，使用 Coze workflow 智能规划行程。
+        接口采用 Server-Sent Events (SSE) 流式返回规划结果，直接返回 Coze workflow 解析后的数据。
+        
+        ## 流式响应格式
+        响应头：
+        - Content-Type: text/event-stream
+        - Cache-Control: no-cache
+        - Connection: keep-alive
+        - X-Accel-Buffering: no
+        
+        ## 数据格式
+        Coze workflow 返回的数据按行输出，每行格式：`type@spot@day_num@spot_desc@thinking_content@`
+        
+        - `type` (int): 枚举值，1=思考内容，2=规划地点
+        - `spot` (string): 景点官方名字
+        - `day_num` (int): 第几天的行程
+        - `spot_desc` (string): 景点信息和提醒
+        - `thinking_content` (string): 思考内容
+        
+        示例：
+        ```
+        1@@@@思考内容 @
+        2@深圳湾公园@1@好玩的公园@@
+        2@世界之窗@1@主题公园，适合拍照@@
+        2@大梅沙@2@海滨浴场，适合游泳@@
+        ```
+        
+        数据格式（每行一个事件）：
+        ```
+        event: data
+        data: {"type":1,"spot":"","day_num":0,"spot_desc":"","thinking_content":"思考内容 "}
+        
+        event: data
+        data: {"type":2,"spot":"深圳湾公园","day_num":1,"spot_desc":"好玩的公园","thinking_content":""}
+        
+        event: data
+        data: {"type":2,"spot":"世界之窗","day_num":1,"spot_desc":"主题公园，适合拍照","thinking_content":""}
+        
+        event: error
+        data: 错误信息
+        ```
+      operationId: planTripStreamV2
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: address_code
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 32
+          description: 目的地地址代码（必填）
+          example: "440300"
+        - name: day_count
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 30
+          description: 行程天数（必填）
+          example: 2
+        - name: travel_preference
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 旅行偏好（JSON 字符串，可选，content 字段会作为 prompt 传递给 Coze）
+          example: '{"type":"打卡","content":"打卡"}'
+      responses:
+        '200':
+          description: 流式返回成功
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                event: data
+                data: {"type":1,"spot":"","day_num":0,"spot_desc":"","thinking_content":"正在为您规划行程..."}
+                
+                event: data
+                data: {"type":2,"spot":"深圳湾公园","day_num":1,"spot_desc":"好玩的公园，适合休闲散步","thinking_content":""}
+                
+                event: data
+                data: {"type":2,"spot":"世界之窗","day_num":1,"spot_desc":"主题公园，适合拍照打卡","thinking_content":""}
+                
+                event: data
+                data: {"type":2,"spot":"大梅沙","day_num":2,"spot_desc":"海滨浴场，适合游泳和沙滩活动","thinking_content":""}
+        '400':
+          description: 参数错误
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                event: error
+                data: 查询地址信息失败
+        '500':
+          description: 服务器错误
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                event: error
+                data: Coze workflow 调用失败
+
+  /trip/spot/create:
+    post:
+      tags:
+        - TripSpot
+      summary: 创建行程地点
+      description: |
+        在指定行程中创建行程地点。
+        如果未提供排序顺序，系统会自动计算该天数的最大排序顺序并加1。
+        地点ID为0或nil表示自定义地点。
+      operationId: createTripSpot
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTripSpotReq'
+            example:
+              trip_id: 1
+              spot_id: 100
+              spot_name: "天安门广场"
+              description: "位于北京市中心的天安门广场"
+              day_number: 1
+              sort_order: 1
+              visit_time: 1704067200
+              notes: "建议早上参观"
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  trip_spot:
+                    id: 1
+                    trip_id: 1
+                    spot_id: 100
+                    spot_name: "天安门广场"
+                    description: "位于北京市中心的天安门广场"
+                    day_number: 1
+                    sort_order: 1
+                    visit_time: 1704067200
+                    notes: "建议早上参观"
+                    create_time: 1704067200
+                    update_time: 1704067200
+        '400':
+          description: 参数错误
+        '404':
+          description: 行程不存在
+        '403':
+          description: 无权访问该行程
+
+  /trip/spot/update:
+    post:
+      tags:
+        - TripSpot
+      summary: 更新行程地点
+      description: |
+        更新行程地点信息，支持部分字段更新（只有非 nil 的字段才会更新）。
+        用户只能更新自己的行程地点。
+      operationId: updateTripSpot
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTripSpotReq'
+            example:
+              id: 1
+              spot_name: "天安门广场（更新）"
+              description: "更新后的描述信息"
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  trip_spot:
+                    id: 1
+                    trip_id: 1
+                    spot_id: 100
+                    spot_name: "天安门广场（更新）"
+                    description: "更新后的描述信息"
+                    day_number: 1
+                    sort_order: 1
+                    visit_time: 1704067200
+                    notes: "建议早上参观"
+                    create_time: 1704067200
+                    update_time: 1704153600
+        '400':
+          description: 参数错误
+        '404':
+          description: 行程地点不存在
+        '403':
+          description: 无权访问该行程地点
+
+  /trip/spot/delete:
+    post:
+      tags:
+        - TripSpot
+      summary: 删除行程地点
+      description: 删除行程地点，用户只能删除自己的行程地点
+      operationId: deleteTripSpot
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteTripSpotReq'
+            example:
+              id: 1
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  success: true
+        '404':
+          description: 行程地点不存在
+        '403':
+          description: 无权访问该行程地点
+
+  /trip/spot/list:
+    post:
+      tags:
+        - TripSpot
+      summary: 获取行程地点列表
+      description: |
+        获取指定行程的行程地点列表，支持按天数过滤。
+        列表按天数和排序顺序升序排列。
+      operationId: getTripSpotList
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetTripSpotListReq'
+            example:
+              trip_id: 1
+              day_number: 1
+              offset: 0
+              size: 100
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  offset: 0
+                  size: 100
+                  total: 2
+                  list:
+                    - id: 1
+                      trip_id: 1
+                      spot_id: 100
+                      spot_name: "天安门广场"
+                      description: "位于北京市中心的天安门广场"
+                      day_number: 1
+                      sort_order: 1
+                      visit_time: 1704067200
+                      create_time: 1704067200
+                    - id: 2
+                      trip_id: 1
+                      spot_id: 101
+                      spot_name: "故宫博物院"
+                      description: "明清两朝的皇家宫殿"
+                      day_number: 1
+                      sort_order: 2
+                      visit_time: 1704070800
+                      create_time: 1704067300
+        '404':
+          description: 行程不存在
+        '403':
+          description: 无权访问该行程
+
+  /trip/spot/batch_update_sort:
+    post:
+      tags:
+        - TripSpot
+      summary: 批量更新行程地点排序
+      description: |
+        批量更新行程地点的排序顺序和天数。
+        所有行程地点必须属于同一个行程，且用户必须拥有该行程的权限。
+      operationId: batchUpdateTripSpotSort
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchUpdateTripSpotSortReq'
+            example:
+              trip_id: 1
+              items:
+                - id: 1
+                  day_number: 1
+                  sort_order: 2
+                - id: 2
+                  day_number: 1
+                  sort_order: 1
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  success: true
+        '400':
+          description: 参数错误
+        '404':
+          description: 行程或行程地点不存在
+        '403':
+          description: 无权访问该行程或行程地点
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Token 认证，格式：Bearer {token}
+
+  schemas:
+    StandardResponse:
+      type: object
+      properties:
+        err_code:
+          type: integer
+          format: int32
+          description: 错误码，0 表示成功，负数表示失败
+          example: 0
+        msg:
+          type: string
+          description: 错误消息或成功消息
+          example: "success"
+        detail:
+          type: string
+          description: 错误详情（可选，用于调试）
+          example: ""
+        data:
+          description: 业务数据，成功时返回，失败时为 null
+          oneOf:
+            - type: object
+            - type: array
+            - type: "null"
+
+    ErrorResponse:
+      type: object
+      properties:
+        err_code:
+          type: integer
+          format: int32
+          description: 错误码
+          example: -100001
+        msg:
+          type: string
+          description: 错误消息
+          example: "param error"
+        detail:
+          type: string
+          description: 错误详情
+          example: "行程名称不能为空"
+        data:
+          type: "null"
+          description: 失败时数据为 null
+
+    CreateTripReq:
+      type: object
+      required:
+        - name
+        - address_code
+        - start_time
+        - end_time
+        - day_count
+      properties:
+        name:
+          type: string
+          description: 行程名称（必填）
+          maxLength: 256
+          example: "北京三日游"
+        address_code:
+          type: string
+          description: 目的地地址代码（必填，关联address_tab.code）
+          maxLength: 32
+          example: "110000"
+        start_time:
+          type: integer
+          format: uint32
+          description: 开始时间，秒级时间戳（必填）
+          example: 1704067200
+        end_time:
+          type: integer
+          format: uint32
+          description: 结束时间，秒级时间戳（必填）
+          example: 1704153600
+        day_count:
+          type: integer
+          description: 行程天数（必填）
+          minimum: 1
+          example: 3
+        travel_preference:
+          $ref: '#/components/schemas/TravelPreference'
+        status:
+          type: integer
+          format: int8
+          description: |
+            行程状态（可选，默认1-规划中）
+            1=规划中, 2=进行中, 3=已完成, 4=已取消
+          enum: [1, 2, 3, 4]
+          default: 1
+          example: 1
+        top:
+          type: integer
+          format: uint32
+          description: 置顶权重，数字越大越靠前（可选，默认0）
+          default: 0
+          example: 0
+        spots:
+          type: array
+          description: 行程地点列表（可选，可在创建行程时同时创建多个地点）
+          items:
+            $ref: '#/components/schemas/CreateTripSpotItem'
+          example:
+            - spot_id: 100
+              spot_name: "天安门广场"
+              description: "位于北京市中心的天安门广场"
+              day_number: 1
+              sort_order: 1
+              visit_time: 1704067200
+              notes: "建议早上参观"
+            - spot_name: "故宫博物院"
+              description: "明清两朝的皇家宫殿"
+              day_number: 1
+              sort_order: 2
+              notes: "需要提前预约"
+
+    UpdateTripReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 行程ID（必填）
+          example: 1
+        name:
+          type: string
+          description: 行程名称
+          maxLength: 256
+          example: "北京三日游（更新）"
+        address_code:
+          type: string
+          description: 目的地地址代码
+          maxLength: 32
+          example: "110000"
+        start_time:
+          type: integer
+          format: uint32
+          description: 开始时间，秒级时间戳
+          example: 1704067200
+        end_time:
+          type: integer
+          format: uint32
+          description: 结束时间，秒级时间戳
+          example: 1704153600
+        day_count:
+          type: integer
+          description: 行程天数
+          minimum: 1
+          example: 3
+        travel_preference:
+          $ref: '#/components/schemas/TravelPreference'
+        status:
+          type: integer
+          format: int8
+          description: |
+            行程状态
+            1=规划中, 2=进行中, 3=已完成, 4=已取消
+          enum: [1, 2, 3, 4]
+          example: 2
+        top:
+          type: integer
+          format: uint32
+          description: 置顶权重，数字越大越靠前
+          example: 10
+
+    DeleteTripReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 行程ID（必填）
+          example: 1
+
+    GetTripListReq:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int8
+          description: |
+            行程状态过滤（可选）
+            1=规划中, 2=进行中, 3=已完成, 4=已取消
+          enum: [1, 2, 3, 4]
+          example: 1
+        offset:
+          type: integer
+          description: 偏移量，默认为 0，最小值为 0
+          default: 0
+          minimum: 0
+          example: 0
+        size:
+          type: integer
+          description: 每页大小，默认 20，最大 100
+          default: 20
+          minimum: 1
+          maximum: 100
+          example: 20
+
+    CreateTripSpotItem:
+      type: object
+      description: 创建行程时的地点项（不包含 trip_id，会在创建行程后自动设置）
+      required:
+        - spot_name
+        - day_number
+      properties:
+        spot_id:
+          type: integer
+          format: int64
+          description: 地点ID（可选，0或nil表示自定义地点，关联spot_tab.id）
+          example: 100
+        spot_name:
+          type: string
+          description: 地点名称（必填）
+          maxLength: 256
+          example: "天安门广场"
+        description:
+          type: string
+          description: 地点描述（可选）
+          example: "位于北京市中心的天安门广场"
+        day_number:
+          type: integer
+          description: 第几天，从1开始（必填），必须在1到day_count之间
+          minimum: 1
+          example: 1
+        sort_order:
+          type: integer
+          description: 排序顺序（可选，如果不提供会自动计算该天数的最大排序顺序+1）
+          minimum: 1
+          example: 1
+        visit_time:
+          type: integer
+          format: uint32
+          description: 预计访问时间，秒级时间戳（可选）
+          example: 1704067200
+        notes:
+          type: string
+          description: 备注信息（可选）
+          example: "建议早上参观"
+
+    CreateTripSpotReq:
+      type: object
+      required:
+        - trip_id
+        - spot_name
+        - day_number
+      properties:
+        trip_id:
+          type: integer
+          format: int64
+          description: 行程ID（必填）
+          example: 1
+        spot_id:
+          type: integer
+          format: int64
+          description: 地点ID（可选，0或nil表示自定义地点，关联spot_tab.id）
+          example: 100
+        spot_name:
+          type: string
+          description: 地点名称（必填）
+          maxLength: 256
+          example: "天安门广场"
+        description:
+          type: string
+          description: 地点描述（可选）
+          example: "位于北京市中心的天安门广场"
+        day_number:
+          type: integer
+          description: 第几天，从1开始（必填）
+          minimum: 1
+          example: 1
+        sort_order:
+          type: integer
+          description: 排序顺序（可选，如果不提供会自动计算该天数的最大排序顺序+1）
+          minimum: 1
+          example: 1
+        visit_time:
+          type: integer
+          format: uint32
+          description: 预计访问时间，秒级时间戳（可选）
+          example: 1704067200
+        notes:
+          type: string
+          description: 备注信息（可选）
+          example: "建议早上参观"
+
+    UpdateTripSpotReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 行程地点ID（必填）
+          example: 1
+        spot_id:
+          type: integer
+          format: int64
+          description: 地点ID
+          example: 100
+        spot_name:
+          type: string
+          description: 地点名称
+          maxLength: 256
+          example: "天安门广场（更新）"
+        description:
+          type: string
+          description: 地点描述
+          example: "更新后的描述信息"
+        day_number:
+          type: integer
+          description: 第几天
+          minimum: 1
+          example: 1
+        sort_order:
+          type: integer
+          description: 排序顺序
+          minimum: 1
+          example: 2
+        visit_time:
+          type: integer
+          format: uint32
+          description: 预计访问时间，秒级时间戳
+          example: 1704067200
+        notes:
+          type: string
+          description: 备注信息
+          example: "建议早上参观"
+
+    DeleteTripSpotReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 行程地点ID（必填）
+          example: 1
+
+    GetTripSpotListReq:
+      type: object
+      required:
+        - trip_id
+      properties:
+        trip_id:
+          type: integer
+          format: int64
+          description: 行程ID（必填）
+          example: 1
+        day_number:
+          type: integer
+          description: 第几天过滤（可选）
+          minimum: 1
+          example: 1
+        offset:
+          type: integer
+          description: 偏移量，默认为 0，最小值为 0
+          default: 0
+          minimum: 0
+          example: 0
+        size:
+          type: integer
+          description: 每页大小，默认 100，最大 500
+          default: 100
+          minimum: 1
+          maximum: 500
+          example: 100
+
+    BatchUpdateTripSpotSortReq:
+      type: object
+      required:
+        - trip_id
+        - items
+      properties:
+        trip_id:
+          type: integer
+          format: int64
+          description: 行程ID（必填）
+          example: 1
+        items:
+          type: array
+          description: 排序项列表（必填）
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/TripSpotSortItem'
+
+    TripSpotSortItem:
+      type: object
+      required:
+        - id
+        - day_number
+        - sort_order
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 行程地点ID（必填）
+          example: 1
+        day_number:
+          type: integer
+          description: 第几天（必填）
+          minimum: 1
+          example: 1
+        sort_order:
+          type: integer
+          description: 排序顺序（必填）
+          minimum: 1
+          example: 1
+
+    TravelPreference:
+      type: object
+      description: 旅行偏好
+      properties:
+        type:
+          type: string
+          description: 偏好类型（字符串，可自定义）
+          example: "文化"
+        content:
+          type: string
+          description: 偏好内容（字符串）
+          example: "喜欢历史文化景点"
+
+    TripDetail:
+      type: object
+      description: 行程详情
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 行程ID
+          example: 1
+        openid:
+          type: string
+          description: 用户openid
+          example: "user_openid_123"
+        name:
+          type: string
+          description: 行程名称
+          example: "北京三日游"
+        address_code:
+          type: string
+          description: 目的地地址代码
+          maxLength: 32
+          example: "110000"
+        start_time:
+          type: integer
+          format: uint32
+          description: 开始时间，秒级时间戳
+          example: 1704067200
+        end_time:
+          type: integer
+          format: uint32
+          description: 结束时间，秒级时间戳
+          example: 1704153600
+        day_count:
+          type: integer
+          description: 行程天数
+          example: 3
+        travel_preference:
+          $ref: '#/components/schemas/TravelPreference'
+        status:
+          type: integer
+          format: int8
+          description: |
+            行程状态
+            1=规划中, 2=进行中, 3=已完成, 4=已取消
+          enum: [1, 2, 3, 4]
+          example: 1
+        top:
+          type: integer
+          format: uint32
+          description: 置顶权重
+          example: 0
+        create_time:
+          type: integer
+          format: int64
+          description: 创建时间（Unix 时间戳，秒）
+          example: 1704067200
+        update_time:
+          type: integer
+          format: int64
+          description: 更新时间（Unix 时间戳，秒）
+          example: 1704067200
+
+    TripListItem:
+      type: object
+      description: 行程列表项
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 行程ID
+          example: 1
+        name:
+          type: string
+          description: 行程名称
+          example: "北京三日游"
+        address_code:
+          type: string
+          description: 目的地地址代码
+          maxLength: 32
+          example: "110000"
+        start_time:
+          type: integer
+          format: uint32
+          description: 开始时间，秒级时间戳
+          example: 1704067200
+        end_time:
+          type: integer
+          format: uint32
+          description: 结束时间，秒级时间戳
+          example: 1704153600
+        day_count:
+          type: integer
+          description: 行程天数
+          example: 3
+        status:
+          type: integer
+          format: int8
+          description: |
+            行程状态
+            1=规划中, 2=进行中, 3=已完成, 4=已取消
+          enum: [1, 2, 3, 4]
+          example: 1
+        top:
+          type: integer
+          format: uint32
+          description: 置顶权重
+          example: 0
+        create_time:
+          type: integer
+          format: int64
+          description: 创建时间（Unix 时间戳，秒）
+          example: 1704067200
+        update_time:
+          type: integer
+          format: int64
+          description: 更新时间（Unix 时间戳，秒）
+          example: 1704067200
+
+    TripSpotDetail:
+      type: object
+      description: 行程地点详情
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 行程地点ID
+          example: 1
+        trip_id:
+          type: integer
+          format: int64
+          description: 行程ID
+          example: 1
+        spot_id:
+          type: integer
+          format: int64
+          description: 地点ID（0表示自定义地点）
+          example: 100
+        spot_name:
+          type: string
+          description: 地点名称
+          example: "天安门广场"
+        description:
+          type: string
+          description: 地点描述
+          example: "位于北京市中心的天安门广场"
+        day_number:
+          type: integer
+          description: 第几天
+          example: 1
+        sort_order:
+          type: integer
+          description: 排序顺序
+          example: 1
+        visit_time:
+          type: integer
+          format: uint32
+          description: 预计访问时间，秒级时间戳
+          example: 1704067200
+        notes:
+          type: string
+          description: 备注信息
+          example: "建议早上参观"
+        create_time:
+          type: integer
+          format: int64
+          description: 创建时间（Unix 时间戳，秒）
+          example: 1704067200
+        update_time:
+          type: integer
+          format: int64
+          description: 更新时间（Unix 时间戳，秒）
+          example: 1704067200
+
+    TripSpotListItem:
+      type: object
+      description: 行程地点列表项
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 行程地点ID
+          example: 1
+        trip_id:
+          type: integer
+          format: int64
+          description: 行程ID
+          example: 1
+        spot_id:
+          type: integer
+          format: int64
+          description: 地点ID
+          example: 100
+        spot_name:
+          type: string
+          description: 地点名称
+          example: "天安门广场"
+        description:
+          type: string
+          description: 地点描述
+          example: "位于北京市中心的天安门广场"
+        day_number:
+          type: integer
+          description: 第几天
+          example: 1
+        sort_order:
+          type: integer
+          description: 排序顺序
+          example: 1
+        visit_time:
+          type: integer
+          format: uint32
+          description: 预计访问时间，秒级时间戳
+          example: 1704067200
+        create_time:
+          type: integer
+          format: int64
+          description: 创建时间（Unix 时间戳，秒）
+          example: 1704067200
+
+    GetTripListResp:
+      type: object
+      properties:
+        offset:
+          type: integer
+          description: 偏移量
+          example: 0
+        size:
+          type: integer
+          description: 每页大小
+          example: 20
+        total:
+          type: integer
+          format: int64
+          description: 总数量
+          example: 1
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/TripListItem'
+          description: 行程列表
+
+    GetTripSpotListResp:
+      type: object
+      properties:
+        offset:
+          type: integer
+          description: 偏移量
+          example: 0
+        size:
+          type: integer
+          description: 每页大小
+          example: 100
+        total:
+          type: integer
+          format: int64
+          description: 总数量
+          example: 2
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/TripSpotListItem'
+          description: 行程地点列表
+
+    PlanTripReq:
+      type: object
+      required:
+        - address_code
+        - day_count
+      description: 智能规划行程请求
+      properties:
+        address_code:
+          type: string
+          maxLength: 32
+          description: 目的地地址代码（必填）
+          example: "110000"
+        day_count:
+          type: integer
+          minimum: 1
+          maximum: 30
+          description: 行程天数（必填）
+          example: 3
+        travel_preference:
+          $ref: '#/components/schemas/TravelPreference'
+          description: 旅行偏好（可选）
+
+    PlanTripSpotItem:
+      type: object
+      description: 智能规划行程流式返回的景点项
+      properties:
+        day_number:
+          type: integer
+          description: 天数编号
+          minimum: 1
+          example: 1
+        spot_id:
+          type: integer
+          format: int64
+          description: 景点ID
+          example: 123
+        spot:
+          $ref: '#/components/schemas/SpotListItem'
+          description: 完整的景点信息
+
+    PlanTripStreamV2Item:
+      type: object
+      description: 智能规划行程流式返回项（V2版本，直接使用 Coze 返回的数据）
+      properties:
+        type:
+          type: integer
+          description: |
+            类型枚举值
+            1=思考内容, 2=规划地点
+          enum: [1, 2]
+          example: 2
+        spot:
+          type: string
+          description: 景点官方名字（type=2 时有值）
+          example: "深圳湾公园"
+        day_num:
+          type: integer
+          description: 第几天的行程（type=2 时必填，范围：1-day_count）
+          minimum: 0
+          example: 1
+        spot_desc:
+          type: string
+          description: 景点信息和提醒（type=2 时有值）
+          example: "好玩的公园，适合休闲散步"
+        thinking_content:
+          type: string
+          description: 思考内容（type=1 时有值）
+          example: "正在为您规划行程..."
+
+    SpotListItem:
+      type: object
+      description: 地点列表项
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 地点ID
+          example: 123
+        district_code:
+          type: string
+          description: 区/县代码
+          example: "110101"
+        city_code:
+          type: string
+          description: 市代码
+          example: "110100"
+        province_code:
+          type: string
+          description: 省代码
+          example: "110000"
+        name:
+          type: string
+          description: 地点名称
+          example: "天安门广场"
+        short_name:
+          type: string
+          description: 简称/别名
+          example: "天安门"
+        description:
+          type: string
+          description: 地点描述
+          example: "位于北京市中心的天安门广场"
+        category:
+          type: integer
+          format: int8
+          description: 地点类型
+          enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 99]
+          example: 2
+        longitude:
+          type: number
+          format: double
+          description: 经度
+          example: 116.397128
+        latitude:
+          type: number
+          format: double
+          description: 纬度
+          example: 39.903738
+        cover_image:
+          type: string
+          description: 封面图片URL
+          example: "https://example.com/images/tiananmen.jpg"
+

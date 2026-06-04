@@ -1,0 +1,1254 @@
+openapi: 3.0.3
+info:
+  title: Common API - 通用接口
+  description: |
+    通用功能相关接口，包括：
+    - 微信相关：自动回复、文件上传、Access Token 管理
+    - 小程序二维码：生成小程序码
+    - 系统信息：获取和更新系统配置
+    - CSDN 相关：热门文章评论、配置管理
+    - AI 相关：AI 回复、记忆擦除、微信公众号文章解析
+    - WebView 解析：解析网页内容
+    - 热点数据：获取热点数据
+    - FE Redis：前端 Redis 缓存管理
+    - 用户行为统计：统计用户行为数据
+    
+    ## 认证方式
+    部分接口需要在请求头中携带 JWT Token：
+    ```
+    Authorization: Bearer {your_jwt_token}
+    ```
+    
+    部分接口（如微信自动回复、AI 回复等）不需要 JWT Token，使用 `NoJWTAuth` 标记。
+    
+    ## 响应格式
+    所有接口遵循统一的响应格式：
+    ```json
+    {
+      "err_code": 0,
+      "msg": "success",
+      "detail": "",
+      "data": {}
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: Backend Superone API Support
+
+servers:
+  - url: /api/so
+    description: API 基础路径
+
+tags:
+  - name: Wechat
+    description: 微信相关接口
+  - name: MiniProgram
+    description: 小程序相关接口
+  - name: System
+    description: 系统信息管理接口
+  - name: CSDN
+    description: CSDN 相关接口
+  - name: AI
+    description: AI 相关接口
+  - name: WebView
+    description: WebView 解析接口
+  - name: HotData
+    description: 热点数据接口
+  - name: FeRedis
+    description: 前端 Redis 缓存管理接口
+  - name: Statistics
+    description: 统计相关接口
+
+paths:
+  /common/wx_auto_reply:
+    post:
+      tags:
+        - Wechat
+      summary: 微信自动回复
+      description: |
+        微信公众平台自动回复接口，接收微信服务器推送的消息并自动回复。
+        支持文本、图片、语音、视频、地理位置、链接等多种消息类型。
+      operationId: wxAutoReply
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/AutoReplyReq'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AutoReplyRsp'
+        '400':
+          description: 参数错误
+
+  /common/wx_upload:
+    post:
+      tags:
+        - Wechat
+      summary: 微信文件上传
+      description: 上传文件到微信服务器，返回文件 URL
+      operationId: wxUpload
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 要上传的文件
+      responses:
+        '200':
+          description: 上传成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  url: "https://example.com/file.jpg"
+        '400':
+          description: 参数错误
+
+  /common/wx_access_token:
+    get:
+      tags:
+        - Wechat
+      summary: 获取微信 Access Token
+      description: 获取微信公众平台的 Access Token
+      operationId: getWxAccessToken
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  access_token: "ACCESS_TOKEN"
+                  expires_in: 7200
+        '400':
+          description: 获取失败
+
+  /common/mp_qrcode:
+    post:
+      tags:
+        - MiniProgram
+      summary: 生成小程序码（图片）
+      description: 生成小程序码，返回图片数据
+      operationId: mpQrcode
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MpQrcodeReq'
+      responses:
+        '200':
+          description: 生成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  base_code: "iVBORw0KGgoAAAANSUhEUgAA..."
+        '400':
+          description: 参数错误
+
+  /common/mp_qrcode_json:
+    post:
+      tags:
+        - MiniProgram
+      summary: 生成小程序码（JSON）
+      description: 生成小程序码，返回 JSON 格式数据
+      operationId: mpQrcodeJson
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MpQrcodeReq'
+      responses:
+        '200':
+          description: 生成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  base_code: "iVBORw0KGgoAAAANSUhEUgAA..."
+        '400':
+          description: 参数错误
+
+  /common/get_access_token_by_id_secret:
+    get:
+      tags:
+        - Wechat
+      summary: 通过 AppId 和 AppSecret 获取 Access Token
+      description: 使用 AppId 和 AppSecret 获取微信 Access Token
+      operationId: getAccessTokenByIdSecret
+      security: []
+      parameters:
+        - name: app_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 微信 AppId（必填）
+          example: "wx7752b4b866490bdd"
+        - name: app_secret
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 微信 AppSecret（必填）
+          example: "your_app_secret"
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  errcode: 0
+                  errmsg: "ok"
+                  access_token: "ACCESS_TOKEN"
+                  expires_in: 7200
+        '400':
+          description: 参数错误
+
+  /common/clear_quota:
+    get:
+      tags:
+        - Wechat
+      summary: 清除 API 调用次数
+      description: 清除微信 API 调用次数限制
+      operationId: clearQuota
+      security: []
+      responses:
+        '200':
+          description: 清除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data: null
+        '400':
+          description: 清除失败
+
+  /common/system/get:
+    get:
+      tags:
+        - System
+      summary: 获取系统信息
+      description: 获取系统配置信息，包括链接菜单、红包配置等
+      operationId: getSystemInfo
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  link_menu:
+                    - name: "首页"
+                      url: "/pages/index/index"
+                    - name: "关于"
+                      url: "/pages/about/about"
+                  red_envelope: "red_envelope_config"
+                  wbbb: 1
+                  iv_introduce_link: "https://example.com/intro"
+        '400':
+          description: 获取失败
+
+  /common/system/update:
+    post:
+      tags:
+        - System
+      summary: 更新系统信息
+      description: 更新系统配置信息
+      operationId: updateSystemInfo
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSystemInfoReq'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  link_menu:
+                    - name: "首页"
+                      url: "/pages/index/index"
+                  red_envelope: "red_envelope_config"
+                  wbbb: 1
+                  iv_introduce_link: "https://example.com/intro"
+        '400':
+          description: 参数错误
+
+  /common/csdn/hot_article_comment:
+    post:
+      tags:
+        - CSDN
+      summary: CSDN 热门文章评论
+      description: 对 CSDN 热门文章进行自动评论
+      operationId: hotArticleComment
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CsdnCommentReq'
+      responses:
+        '200':
+          description: 评论成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data: null
+        '400':
+          description: 参数错误
+
+  /common/csdn/config/get:
+    get:
+      tags:
+        - CSDN
+      summary: 获取 CSDN 配置
+      description: 获取当前用户的 CSDN 配置信息
+      operationId: getCsdnConfig
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  user_name: "csdn_user"
+                  user_token: "user_token_123"
+                  comment_prompt: "评论提示词"
+                  comment_suffix: "评论后缀"
+                  hot_article_num: 10
+        '400':
+          description: 获取失败
+
+  /common/csdn/config/update:
+    post:
+      tags:
+        - CSDN
+      summary: 更新 CSDN 配置
+      description: 更新当前用户的 CSDN 配置信息
+      operationId: updateCsdnConfig
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCsdnConfigReq'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data: null
+        '400':
+          description: 参数错误
+
+  /common/csdn/trigger_comment:
+    post:
+      tags:
+        - CSDN
+      summary: 触发 CSDN 评论
+      description: 手动触发 CSDN 评论任务
+      operationId: triggerComment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: 触发成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data: null
+        '400':
+          description: 触发失败
+
+  /common/ai/reply:
+    post:
+      tags:
+        - AI
+      summary: AI 回复
+      description: 获取 AI 回复内容
+      operationId: getAiReply
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiReplyReq'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  answer: "这是 AI 的回复内容"
+        '400':
+          description: 参数错误
+
+  /common/ai/reply/memory_erasure:
+    get:
+      tags:
+        - AI
+      summary: AI 记忆擦除
+      description: 清除指定用户的 AI 对话记忆
+      operationId: aiReplyMemoryErasure
+      security: []
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 用户ID（必填）
+          example: "user_123"
+      responses:
+        '200':
+          description: 擦除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data: null
+        '400':
+          description: 参数错误
+
+  /common/ai/wechat_article:
+    post:
+      tags:
+        - AI
+      summary: AI 解析微信公众号文章
+      description: 使用 AI 解析微信公众号文章内容并生成摘要
+      operationId: getAiWechatArticleReply
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiWechatArticleReq'
+      responses:
+        '200':
+          description: 解析成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  answer: "文章摘要内容"
+                  title: "文章标题"
+                  origin_content: "原始文章内容"
+        '400':
+          description: 参数错误
+
+  /common/ai/reply/stream:
+    get:
+      tags:
+        - AI
+      summary: AI 回复（流式）
+      description: 获取 AI 回复内容（流式返回）
+      operationId: aiReplyStream
+      security: []
+      parameters:
+        - name: question
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 问题内容（必填）
+          example: "什么是人工智能？"
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 用户ID（必填）
+          example: "user_123"
+        - name: target
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int8
+          description: 目标 AI（可选）
+          example: 1
+      responses:
+        '200':
+          description: 流式返回成功
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: "data: 这是 AI 的回复内容\n\n"
+        '400':
+          description: 参数错误
+
+  /common/web_view/parse:
+    get:
+      tags:
+        - WebView
+      summary: 解析 WebView
+      description: 解析网页内容，提取标题和正文
+      operationId: parseWebView
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+          description: 要解析的网页 URL（必填）
+          example: "https://example.com/article"
+      responses:
+        '200':
+          description: 解析成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  url: "https://example.com/article"
+                  title: "文章标题"
+                  content: "文章正文内容"
+        '400':
+          description: 参数错误
+
+  /common/hot_data/get:
+    get:
+      tags:
+        - HotData
+      summary: 获取热点数据
+      description: 获取热点数据列表
+      operationId: getHotData
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: last_x_day
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+          description: 最近 X 天的数据（可选）
+          example: 7
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  list:
+                    - platform: 1
+                      category: "科技"
+                      title: "热点标题"
+                      url: "https://example.com/article"
+                      description: "热点描述"
+                      rank: 1
+                      ctime: 1704067200
+        '400':
+          description: 获取失败
+
+  /common/fe_redis/get:
+    get:
+      tags:
+        - FeRedis
+      summary: 获取前端 Redis 缓存
+      description: 获取前端 Redis 缓存值
+      operationId: getFeRedis
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: redis_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Redis 键名（必填）
+          example: "fe_cache_key"
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  redis_key: "fe_cache_key"
+                  redis_value: "cache_value"
+        '400':
+          description: 参数错误
+
+  /common/fe_redis/set:
+    post:
+      tags:
+        - FeRedis
+      summary: 设置前端 Redis 缓存
+      description: 设置前端 Redis 缓存值
+      operationId: setFeRedis
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetFeRedisReq'
+      responses:
+        '200':
+          description: 设置成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data: null
+        '400':
+          description: 参数错误
+
+  /common/fe_redis/del:
+    post:
+      tags:
+        - FeRedis
+      summary: 删除前端 Redis 缓存
+      description: 删除前端 Redis 缓存
+      operationId: delFeRedis
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DelFeRedisReq'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data: null
+        '400':
+          description: 参数错误
+
+  /common/user_behavior_stats:
+    get:
+      tags:
+        - Statistics
+      summary: 获取用户行为统计
+      description: 获取用户行为统计数据，按天统计各表的创建、更新等操作
+      operationId: getUserBehaviorStats
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: last_n_days
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 365
+            default: 7
+          description: 最近 N 天的数据（可选，默认 7 天，范围 1-365）
+          example: 7
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  days:
+                    - date: "2024-01-01"
+                      table_stats:
+                        flow_info:
+                          table_name: "flow_info"
+                          display_name: "流程信息"
+                          create_count: 10
+                          update_count: 5
+                          create_user_count: 3
+        '400':
+          description: 参数错误
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Token 认证
+
+  schemas:
+    StandardResponse:
+      type: object
+      required:
+        - err_code
+        - msg
+        - detail
+      properties:
+        err_code:
+          type: integer
+          format: int32
+          description: 错误码，0 表示成功，负数表示失败
+          example: 0
+        msg:
+          type: string
+          description: 错误消息或成功消息
+          example: "success"
+        detail:
+          type: string
+          description: 错误详情（可选，用于调试）
+          example: ""
+        data:
+          description: 业务数据，成功时返回，失败时为 null
+          nullable: true
+
+    AutoReplyReq:
+      type: object
+      description: 微信自动回复请求（XML 格式）
+      properties:
+        ToUserName:
+          type: string
+          description: 接收方账号（开发者微信号）
+        FromUserName:
+          type: string
+          description: 发送方账号（用户 OpenID）
+        CreateTime:
+          type: integer
+          format: int32
+          description: 消息创建时间
+        MsgType:
+          type: string
+          description: 消息类型（text | image | voice | shortvideo | location）
+          enum: [text, image, voice, shortvideo, location]
+        Event:
+          type: string
+          description: 事件类型
+        EventKey:
+          type: string
+          description: 事件键值
+        Ticket:
+          type: string
+          description: 二维码 Ticket
+        Content:
+          type: string
+          description: 文本消息内容
+        MsgId:
+          type: integer
+          format: int64
+          description: 消息ID
+        PicUrl:
+          type: string
+          description: 图片链接
+        MediaId:
+          type: string
+          description: 媒体ID
+        Format:
+          type: string
+          description: 语音格式（amr | speex）
+        Location_X:
+          type: string
+          description: 地理位置纬度
+        Location_Y:
+          type: string
+          description: 地理位置经度
+        Scale:
+          type: string
+          description: 地图缩放大小
+        Label:
+          type: string
+          description: 地理位置信息
+        Title:
+          type: string
+          description: 链接消息标题
+        Description:
+          type: string
+          description: 链接消息描述
+        Url:
+          type: string
+          description: 链接消息 URL
+
+    AutoReplyRsp:
+      type: object
+      description: 微信自动回复响应（XML 格式）
+      properties:
+        ToUserName:
+          type: string
+          description: 接收方账号（用户 OpenID）
+        FromUserName:
+          type: string
+          description: 发送方账号（开发者微信号）
+        CreateTime:
+          type: integer
+          format: int32
+          description: 消息创建时间
+        MsgType:
+          type: string
+          description: 消息类型
+          example: "text"
+        Content:
+          type: string
+          description: 回复内容
+
+    MpQrcodeReq:
+      type: object
+      required:
+        - path
+        - scene
+        - env_version
+      properties:
+        path:
+          type: string
+          description: 小程序页面路径（必填）
+          example: "pages/index/index"
+        scene:
+          type: string
+          description: 场景值（必填）
+          example: "a=1"
+        check_path:
+          type: boolean
+          description: 是否检查路径（可选）
+          example: true
+        env_version:
+          type: string
+          description: 环境版本（必填，release | trial | develop）
+          enum: [release, trial, develop]
+          example: "release"
+        app_id:
+          type: string
+          description: 小程序 AppID（可选，传入时优先使用该 AppID 生成二维码）
+          example: "wx9f8f3f1dbfb29cb1"
+
+    AiReplyReq:
+      type: object
+      required:
+        - question
+        - user_id
+      properties:
+        question:
+          type: string
+          description: 问题内容（必填）
+          example: "什么是人工智能？"
+        user_id:
+          type: string
+          description: 用户ID（必填）
+          example: "user_123"
+        target:
+          type: integer
+          format: int8
+          description: 目标 AI（可选）
+          example: 1
+
+    AiReplyResp:
+      type: object
+      properties:
+        answer:
+          type: string
+          description: AI 回复内容
+          example: "这是 AI 的回复内容"
+
+    AiWechatArticleReq:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          description: 微信公众号文章 URL（必填）
+          example: "https://mp.weixin.qq.com/s/xxx"
+
+    AiWechatArticleResp:
+      type: object
+      properties:
+        answer:
+          type: string
+          description: AI 生成的摘要
+          example: "文章摘要内容"
+        title:
+          type: string
+          description: 文章标题
+          example: "文章标题"
+        origin_content:
+          type: string
+          description: 原始文章内容
+          example: "原始文章内容"
+
+    UpdateSystemInfoReq:
+      type: object
+      properties:
+        wbbb:
+          type: integer
+          format: int8
+          description: WBBB 配置（可选）
+          example: 1
+        link_menu_index:
+          type: integer
+          format: int32
+          description: 链接菜单索引（可选）
+          example: 0
+        link_menu_name:
+          type: string
+          description: 链接菜单名称（可选）
+          example: "首页"
+        link_menu_url:
+          type: string
+          description: 链接菜单 URL（可选）
+          example: "/pages/index/index"
+
+    SystemInfoView:
+      type: object
+      properties:
+        link_menu:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: 菜单名称
+                example: "首页"
+              url:
+                type: string
+                description: 菜单 URL
+                example: "/pages/index/index"
+        red_envelope:
+          type: string
+          description: 红包配置
+          example: "red_envelope_config"
+        wbbb:
+          type: integer
+          format: int8
+          nullable: true
+          description: WBBB 配置
+          example: 1
+        iv_introduce_link:
+          type: string
+          description: 介绍链接
+          example: "https://example.com/intro"
+
+    CsdnCommentReq:
+      type: object
+      properties:
+        prompt:
+          type: string
+          description: 评论提示词
+          example: "评论提示词"
+        user_name:
+          type: string
+          description: CSDN 用户名
+          example: "csdn_user"
+        user_token:
+          type: string
+          description: CSDN 用户 Token
+          example: "user_token_123"
+        comment_suffix:
+          type: string
+          description: 评论后缀
+          example: "评论后缀"
+        openid:
+          type: string
+          description: 用户 OpenID
+          example: "openid_123"
+        article_num:
+          type: integer
+          format: int32
+          description: 文章数量
+          example: 10
+
+    GetCsdnConfigResp:
+      type: object
+      properties:
+        user_name:
+          type: string
+          description: CSDN 用户名
+          example: "csdn_user"
+        user_token:
+          type: string
+          description: CSDN 用户 Token
+          example: "user_token_123"
+        comment_prompt:
+          type: string
+          description: 评论提示词
+          example: "评论提示词"
+        comment_suffix:
+          type: string
+          description: 评论后缀
+          example: "评论后缀"
+        hot_article_num:
+          type: integer
+          format: int32
+          description: 热门文章数量
+          example: 10
+
+    UpdateCsdnConfigReq:
+      type: object
+      required:
+        - user_name
+        - user_token
+      properties:
+        user_name:
+          type: string
+          description: CSDN 用户名（必填）
+          example: "csdn_user"
+        user_token:
+          type: string
+          description: CSDN 用户 Token（必填）
+          example: "user_token_123"
+
+    HotDataView:
+      type: object
+      properties:
+        platform:
+          type: integer
+          format: int32
+          description: 平台类型
+          example: 1
+        category:
+          type: string
+          description: 分类
+          example: "科技"
+        title:
+          type: string
+          description: 标题
+          example: "热点标题"
+        url:
+          type: string
+          format: uri
+          description: 链接
+          example: "https://example.com/article"
+        description:
+          type: string
+          description: 描述
+          example: "热点描述"
+        rank:
+          type: integer
+          format: int64
+          description: 排名
+          example: 1
+        ctime:
+          type: integer
+          format: uint32
+          description: 创建时间（Unix 时间戳，秒）
+          example: 1704067200
+
+    GetHotDataResp:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/HotDataView'
+
+    SetFeRedisReq:
+      type: object
+      required:
+        - redis_key
+        - redis_value
+      properties:
+        redis_key:
+          type: string
+          description: Redis 键名（必填）
+          example: "fe_cache_key"
+        redis_value:
+          type: string
+          description: Redis 值（必填）
+          example: "cache_value"
+
+    DelFeRedisReq:
+      type: object
+      required:
+        - redis_key
+      properties:
+        redis_key:
+          type: string
+          description: Redis 键名（必填）
+          example: "fe_cache_key"
+
+    GetUserBehaviorStatsResp:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+                description: 日期，格式：YYYY-MM-DD
+                example: "2024-01-01"
+              table_stats:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    table_name:
+                      type: string
+                      description: 表名
+                      example: "flow_info"
+                    display_name:
+                      type: string
+                      description: 显示名称
+                      example: "流程信息"
+                    create_count:
+                      type: integer
+                      format: int64
+                      description: 当天新增数
+                      example: 10
+                    update_count:
+                      type: integer
+                      format: int64
+                      description: 当天更新数
+                      example: 5
+                    create_user_count:
+                      type: integer
+                      format: int64
+                      description: 当天新增数据人数（不同openid数）
+                      example: 3
+

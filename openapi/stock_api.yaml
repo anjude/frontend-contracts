@@ -1,0 +1,479 @@
+openapi: 3.0.3
+info:
+  title: Stock API - 标的管理接口
+  description: |
+    标的管理相关接口，包括：
+    - 标的管理：创建、查询、更新、删除标的
+    - 支持按关键词搜索和类型筛选
+    - 支持置顶功能
+    
+    ## 认证方式
+    所有接口需要在请求头中携带 JWT Token：
+    ```
+    Authorization: Bearer {your_jwt_token}
+    ```
+    
+    ## 响应格式
+    所有接口遵循统一的响应格式：
+    ```json
+    {
+      "err_code": 0,
+      "msg": "success",
+      "detail": "",
+      "data": {}
+    }
+    ```
+    
+    ## 标的类型
+    - 1: 股票
+    - 2: 基金
+    - 3: 债券
+    - 4: ETF
+    - 5: 其他
+  version: 1.0.0
+  contact:
+    name: Backend Superone API Support
+
+servers:
+  - url: /api/so
+    description: API 基础路径
+
+tags:
+  - name: Stock
+    description: 标的管理相关接口
+
+paths:
+  /stock/list:
+    post:
+      tags:
+        - Stock
+      summary: 获取标的列表
+      description: |
+        分页获取标的列表，支持关键词搜索和类型筛选，按置顶权重和更新时间排序。
+        
+        排序规则：按 `top DESC, update_time DESC` 排序，置顶的标会排在前面。
+      operationId: getStockList
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetStockListReq'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  offset: 0
+                  size: 20
+                  total: 100
+                  list:
+                    - id: 1
+                      openid: "account_xxx"
+                      name: "腾讯控股"
+                      code: "00700"
+                      type: 1
+                      top: 0
+                      create_time: 1704067200
+                      update_time: 1704067200
+        '400':
+          description: 参数错误
+
+  /stock/detail:
+    post:
+      tags:
+        - Stock
+      summary: 获取标的详情
+      description: 根据标的ID获取详细信息
+      operationId: getStockDetail
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetStockDetailReq'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  stock:
+                    id: 1
+                    openid: "account_xxx"
+                    name: "腾讯控股"
+                    code: "00700"
+                    type: 1
+                    top: 0
+                    create_time: 1704067200
+                    update_time: 1704067200
+        '400':
+          description: 参数错误
+        '404':
+          description: 标的不存在
+        '403':
+          description: 无权限访问该标的
+
+  /stock/create:
+    post:
+      tags:
+        - Stock
+      summary: 创建标的
+      description: 创建新的标的（股票、基金、债券、ETF等）
+      operationId: createStock
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStockReq'
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  stock_id: 1
+        '400':
+          description: 参数错误
+
+  /stock/update:
+    post:
+      tags:
+        - Stock
+      summary: 更新标的
+      description: |
+        更新标的信息，支持部分更新。只有传递的字段才会更新。
+        
+        **置顶功能**：
+        - 置顶标的：传入 `top` 字段，值为时间戳（如 `utils.GetTimeStamp()` 获取的值），数字越大越靠前
+        - 取消置顶：传入 `top: 0`
+        - 列表排序：置顶的标会按 `top` 值降序排列，`top` 值越大越靠前
+        
+        示例：
+        - 只更新名称: `{"stock_id": 1, "name": "新名称"}`
+        - 只更新代码: `{"stock_id": 1, "code": "00001"}`
+        - 更新多个字段: `{"stock_id": 1, "name": "新名称", "code": "00001", "type": 1}`
+        - 置顶标的: `{"stock_id": 1, "top": 1704067200}` (传入当前时间戳)
+        - 取消置顶: `{"stock_id": 1, "top": 0}`
+      operationId: updateStock
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStockReq'
+            example:
+              stock_id: 1
+              name: "更新后的标的名称"
+              top: 1704067200
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  success: true
+        '400':
+          description: 参数错误
+        '404':
+          description: 标的不存在
+        '403':
+          description: 无权限修改该标的
+
+  /stock/delete:
+    post:
+      tags:
+        - Stock
+      summary: 删除标的
+      description: 删除指定的标的
+      operationId: deleteStock
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteStockReq'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  success: true
+        '400':
+          description: 参数错误
+        '404':
+          description: 标的不存在
+        '403':
+          description: 无权限删除该标的
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    StandardResponse:
+      type: object
+      properties:
+        err_code:
+          type: integer
+          description: 错误码，0表示成功
+        msg:
+          type: string
+          description: 响应消息
+        detail:
+          type: string
+          description: 详细信息
+        data:
+          type: object
+          description: 响应数据
+
+    GetStockListReq:
+      type: object
+      required:
+        - size
+      properties:
+        size:
+          type: integer
+          description: 每页大小，默认20，最大100
+          default: 20
+          maximum: 100
+          minimum: 1
+        offset:
+          type: integer
+          description: 偏移量，默认0
+          default: 0
+          minimum: 0
+        keyword:
+          type: string
+          description: 搜索关键词（可选，支持按名称或代码搜索）
+        type:
+          type: integer
+          description: 标的类型筛选（可选，1-股票 2-基金 3-债券 4-ETF 5-其他）
+          enum: [1, 2, 3, 4, 5]
+
+    GetStockListResp:
+      type: object
+      properties:
+        offset:
+          type: integer
+          description: 偏移量
+        size:
+          type: integer
+          description: 每页大小
+        total:
+          type: integer
+          format: int64
+          description: 总数
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockListItem'
+
+    StockListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 标的ID
+        openid:
+          type: string
+          description: 用户标识
+        name:
+          type: string
+          description: 标的名称
+        code:
+          type: string
+          description: 标的代码
+        type:
+          type: integer
+          description: 标的类型（1-股票 2-基金 3-债券 4-ETF 5-其他）
+          enum: [1, 2, 3, 4, 5]
+        top:
+          type: integer
+          format: int32
+          description: 置顶权重
+        create_time:
+          type: integer
+          format: int64
+          description: 创建时间戳
+        update_time:
+          type: integer
+          format: int64
+          description: 更新时间戳
+
+    GetStockDetailReq:
+      type: object
+      required:
+        - stock_id
+      properties:
+        stock_id:
+          type: integer
+          format: int64
+          description: 标的ID
+
+    GetStockDetailResp:
+      type: object
+      properties:
+        stock:
+          $ref: '#/components/schemas/StockDetail'
+
+    StockDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 标的ID
+        openid:
+          type: string
+          description: 用户标识
+        name:
+          type: string
+          description: 标的名称
+        code:
+          type: string
+          description: 标的代码
+        type:
+          type: integer
+          description: 标的类型（1-股票 2-基金 3-债券 4-ETF 5-其他）
+          enum: [1, 2, 3, 4, 5]
+        top:
+          type: integer
+          format: int32
+          description: 置顶权重
+        create_time:
+          type: integer
+          format: int64
+          description: 创建时间戳
+        update_time:
+          type: integer
+          format: int64
+          description: 更新时间戳
+
+    CreateStockReq:
+      type: object
+      required:
+        - name
+        - code
+        - type
+      properties:
+        name:
+          type: string
+          description: 标的名称
+          maxLength: 128
+          minLength: 1
+        code:
+          type: string
+          description: 标的代码
+          maxLength: 32
+          minLength: 1
+        type:
+          type: integer
+          description: 标的类型（1-股票 2-基金 3-债券 4-ETF 5-其他）
+          enum: [1, 2, 3, 4, 5]
+
+    CreateStockResp:
+      type: object
+      properties:
+        stock_id:
+          type: integer
+          format: int64
+          description: 创建的标的ID
+
+    UpdateStockReq:
+      type: object
+      required:
+        - stock_id
+      properties:
+        stock_id:
+          type: integer
+          format: int64
+          description: 标的ID
+        name:
+          type: string
+          description: 标的名称（可选）
+          maxLength: 128
+        code:
+          type: string
+          description: 标的代码（可选）
+          maxLength: 32
+        type:
+          type: integer
+          description: 标的类型（可选，1-股票 2-基金 3-债券 4-ETF 5-其他）
+          enum: [1, 2, 3, 4, 5]
+        top:
+          type: integer
+          format: int32
+          description: 置顶权重（传入时间戳实现置顶，传入0取消置顶）
+
+    UpdateStockResp:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 是否成功
+
+    DeleteStockReq:
+      type: object
+      required:
+        - stock_id
+      properties:
+        stock_id:
+          type: integer
+          format: int64
+          description: 标的ID
+
+    DeleteStockResp:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 是否成功
+

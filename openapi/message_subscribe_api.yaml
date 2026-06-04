@@ -1,0 +1,460 @@
+openapi: 3.0.3
+info:
+  title: Message Subscribe API - 消息订阅管理接口
+  description: |
+    消息订阅管理相关接口，包括：
+    - 订阅列表：分页查询订阅列表，支持按消息类型和关联ID筛选
+    - 订阅详情：获取订阅详细信息
+    - 创建订阅：创建新的消息订阅
+    - 更新订阅：更新订阅信息（部分更新）
+    - 删除订阅：删除消息订阅
+    
+    ## 认证方式
+    所有接口需要在请求头中携带 JWT Token：
+    ```
+    Authorization: Bearer {your_jwt_token}
+    ```
+    
+    ## 响应格式
+    所有接口遵循统一的响应格式：
+    ```json
+    {
+      "err_code": 0,
+      "msg": "success",
+      "detail": "",
+      "data": {}
+    }
+    ```
+    
+    ## 消息类型说明
+    - 1: 物品提醒订阅
+    - 2: 周报打卡订阅
+    - 其他类型根据业务需要扩展
+  version: 1.0.0
+  contact:
+    name: Backend Superone API Support
+
+servers:
+  - url: /api/so
+    description: API 基础路径
+
+tags:
+  - name: MessageSubscribe
+    description: 消息订阅管理相关接口
+
+paths:
+  /message_subscribe/list:
+    post:
+      tags:
+        - MessageSubscribe
+      summary: 获取订阅列表
+      description: 分页获取消息订阅列表，支持按消息类型和关联ID筛选
+      operationId: getMessageSubscribeList
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetMessageSubscribeListReq'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  offset: 0
+                  size: 20
+                  total: 100
+                  list:
+                    - id: 1
+                      openid: "account_xxx"
+                      message_tmp_id: "jcEZnLhIWIRo-ziEF1K8bO2tx5XR3shrQ63iW3zetb0"
+                      content: '{"thing6":{"value":"您有新的物品提醒"},"thing15":{"value":"点击查看物品详情！"}}'
+                      sub_times: 1
+                      trigger_time: 1704067200
+                      last_trigger_time: 0
+                      msg_type: 1
+                      enter_page: "/pages/item-management/detail/index"
+                      relation_id: 123
+                      create_time: 1704067200
+                      update_time: 1704067200
+        '400':
+          description: 参数错误
+
+  /message_subscribe/detail:
+    get:
+      tags:
+        - MessageSubscribe
+      summary: 获取订阅详情
+      description: 根据订阅ID获取详细信息
+      operationId: getMessageSubscribeDetail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: 订阅ID
+          example: 1
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  openid: "account_xxx"
+                  message_tmp_id: "jcEZnLhIWIRo-ziEF1K8bO2tx5XR3shrQ63iW3zetb0"
+                  content: '{"thing6":{"value":"您有新的物品提醒"},"thing15":{"value":"点击查看物品详情！"}}'
+                  sub_times: 1
+                  trigger_time: 1704067200
+                  last_trigger_time: 0
+                  msg_type: 1
+                  enter_page: "/pages/item-management/detail/index"
+                  relation_id: 123
+                  create_time: 1704067200
+                  update_time: 1704067200
+        '400':
+          description: 参数错误
+        '404':
+          description: 订阅不存在
+        '403':
+          description: 无权限访问该订阅
+
+  /message_subscribe/create:
+    post:
+      tags:
+        - MessageSubscribe
+      summary: 创建订阅
+      description: 创建新的消息订阅
+      operationId: createMessageSubscribe
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMessageSubscribeReq'
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  openid: "account_xxx"
+                  message_tmp_id: "jcEZnLhIWIRo-ziEF1K8bO2tx5XR3shrQ63iW3zetb0"
+                  content: '{"thing6":{"value":"您有新的物品提醒"},"thing15":{"value":"点击查看物品详情！"}}'
+                  sub_times: 1
+                  trigger_time: 1704067200
+                  last_trigger_time: 0
+                  msg_type: 1
+                  enter_page: "/pages/item-management/detail/index"
+                  relation_id: 123
+                  create_time: 1704067200
+                  update_time: 1704067200
+        '400':
+          description: 参数错误
+
+  /message_subscribe/update:
+    post:
+      tags:
+        - MessageSubscribe
+      summary: 更新订阅
+      description: 更新订阅信息（部分更新，只更新传递的字段）
+      operationId: updateMessageSubscribe
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMessageSubscribeReq'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  openid: "account_xxx"
+                  message_tmp_id: "jcEZnLhIWIRo-ziEF1K8bO2tx5XR3shrQ63iW3zetb0"
+                  content: '{"thing6":{"value":"您有新的物品提醒"},"thing15":{"value":"点击查看物品详情！"}}'
+                  sub_times: 1
+                  trigger_time: 1704070800
+                  last_trigger_time: 0
+                  msg_type: 1
+                  enter_page: "/pages/item-management/detail/index"
+                  relation_id: 123
+                  create_time: 1704067200
+                  update_time: 1704070800
+        '400':
+          description: 参数错误
+        '404':
+          description: 订阅不存在
+        '403':
+          description: 无权限修改该订阅
+
+  /message_subscribe/delete:
+    post:
+      tags:
+        - MessageSubscribe
+      summary: 删除订阅
+      description: 根据订阅ID删除消息订阅
+      operationId: deleteMessageSubscribe
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteMessageSubscribeReq'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  success: true
+        '400':
+          description: 参数错误
+        '404':
+          description: 订阅不存在
+        '403':
+          description: 无权限删除该订阅
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    StandardResponse:
+      type: object
+      properties:
+        err_code:
+          type: integer
+          description: 错误码，0表示成功
+        msg:
+          type: string
+          description: 响应消息
+        detail:
+          type: string
+          description: 详细信息
+        data:
+          type: object
+          description: 响应数据
+
+    GetMessageSubscribeListReq:
+      type: object
+      required: []
+      properties:
+        offset:
+          type: integer
+          description: 偏移量，默认0
+          example: 0
+        size:
+          type: integer
+          description: 每页数量，默认20，最大100
+          example: 20
+        msg_type:
+          type: integer
+          description: 消息类型筛选（可选）
+          example: 1
+        relation_id:
+          type: integer
+          format: int64
+          description: 关联ID筛选（可选）
+          example: 123
+
+    GetMessageSubscribeListResp:
+      type: object
+      properties:
+        offset:
+          type: integer
+          description: 偏移量
+        size:
+          type: integer
+          description: 每页数量
+        total:
+          type: integer
+          format: int64
+          description: 总数
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageSubscribeDetail'
+
+    GetMessageSubscribeDetailReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 订阅ID
+          example: 1
+
+    MessageSubscribeDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 订阅ID
+        openid:
+          type: string
+          description: 用户OpenID
+        message_tmp_id:
+          type: string
+          description: 消息模板ID
+        content:
+          type: string
+          description: 消息内容（JSON格式）
+        sub_times:
+          type: integer
+          format: int64
+          description: 订阅次数
+        trigger_time:
+          type: integer
+          description: 触发时间戳（Unix时间戳）
+        last_trigger_time:
+          type: integer
+          description: 最后触发时间戳（Unix时间戳）
+        msg_type:
+          type: integer
+          description: 消息类型
+        enter_page:
+          type: string
+          description: 进入页面
+        relation_id:
+          type: integer
+          format: int64
+          description: 关联ID（如item_id）
+        create_time:
+          type: integer
+          description: 创建时间戳（Unix时间戳）
+        update_time:
+          type: integer
+          description: 更新时间戳（Unix时间戳）
+
+    CreateMessageSubscribeReq:
+      type: object
+      required:
+        - message_tmp_id
+        - content
+        - msg_type
+      properties:
+        message_tmp_id:
+          type: string
+          description: 消息模板ID
+          example: "jcEZnLhIWIRo-ziEF1K8bO2tx5XR3shrQ63iW3zetb0"
+        content:
+          type: string
+          description: 消息内容（JSON格式）
+          example: '{"thing6":{"value":"您有新的物品提醒"},"thing15":{"value":"点击查看物品详情！"}}'
+        msg_type:
+          type: integer
+          description: 消息类型
+          example: 1
+        trigger_time:
+          type: integer
+          description: 触发时间戳（可选，Unix时间戳）
+          example: 1704067200
+        enter_page:
+          type: string
+          description: 进入页面（可选，默认为 "/pages/index/index"）
+          example: "/pages/item-management/detail/index"
+        relation_id:
+          type: integer
+          format: int64
+          description: 关联ID（如item_id，可选）
+          example: 123
+
+    UpdateMessageSubscribeReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 订阅ID
+          example: 1
+        message_tmp_id:
+          type: string
+          description: 消息模板ID（可选）
+          example: "jcEZnLhIWIRo-ziEF1K8bO2tx5XR3shrQ63iW3zetb0"
+        content:
+          type: string
+          description: 消息内容（可选，JSON格式）
+          example: '{"thing6":{"value":"您有新的物品提醒"},"thing15":{"value":"点击查看物品详情！"}}'
+        trigger_time:
+          type: integer
+          description: 触发时间戳（可选，Unix时间戳）
+          example: 1704070800
+        enter_page:
+          type: string
+          description: 进入页面（可选）
+          example: "/pages/item-management/detail/index"
+
+    DeleteMessageSubscribeReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 订阅ID
+          example: 1
+
+    DeleteMessageSubscribeResp:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 是否成功
+          example: true
+

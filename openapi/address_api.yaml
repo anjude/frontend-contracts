@@ -1,0 +1,1114 @@
+openapi: 3.0.3
+info:
+  title: Address API - 地址和地点管理接口
+  description: |
+    地址和地点管理相关接口，包括：
+    - 地址模糊查询：根据关键词搜索省市区县等地址信息
+    - 地点管理：创建、更新、删除、查询和搜索地点信息
+    
+    ## 认证方式
+    所有接口都需要在请求头中携带 JWT Token：
+    ```
+    Authorization: Bearer {your_jwt_token}
+    ```
+    
+    ## 响应格式
+    所有接口遵循统一的响应格式：
+    ```json
+    {
+      "err_code": 0,
+      "msg": "success",
+      "detail": "",
+      "data": {}
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: Backend Superone API Support
+
+servers:
+  - url: /api/so
+    description: API 基础路径
+
+tags:
+  - name: Address
+    description: 地址管理相关接口
+  - name: Spot
+    description: 地点管理相关接口
+
+paths:
+  /address/search:
+    post:
+      tags:
+        - Address
+      summary: 地址模糊查询
+      description: |
+        根据关键词模糊查询地址信息，支持按地址级别过滤。
+        支持在名称、简称、拼音、拼音首字母、完整路径等字段中进行模糊匹配。
+      operationId: searchAddress
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchAddressReq'
+            example:
+              keyword: "北京"
+              offset: 0
+              size: 20
+              level: 2
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  offset: 0
+                  size: 20
+                  total: 1
+                  list:
+                    - id: 110000
+                      parent_code: ""
+                      name: "北京市"
+                      short_name: "北京"
+                      code: "110000"
+                      level: 2
+                      pinyin: "beijingshi"
+                      pinyin_short: "bjs"
+                      full_path: "北京市"
+                      status: 1
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                err_code: -100001
+                msg: "param error"
+                detail: "keyword is required"
+                data: null
+
+  /address/spot/create:
+    post:
+      tags:
+        - Spot
+      summary: 创建地点
+      description: 创建一个新的地点，系统会根据 district_code 自动获取省市区信息
+      operationId: createSpot
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSpotReq'
+            example:
+              district_code: "110101"
+              name: "天安门广场"
+              short_name: "天安门"
+              description: "位于北京市中心的天安门广场"
+              category: 2
+              longitude: 116.397128
+              latitude: 39.903738
+              pinyin: "tiananmenguangchang"
+              pinyin_short: "tamgc"
+              cover_image: "https://example.com/images/tiananmen.jpg"
+              images:
+                - "https://example.com/images/tiananmen1.jpg"
+                - "https://example.com/images/tiananmen2.jpg"
+              extra_data:
+                opening_hours: "06:00"
+                closing_hours: "22:00"
+                ticket_price: 0
+                contact_phone: "010-12345678"
+                rating: 4.8
+                visit_duration: 120
+                best_season: "春季、秋季"
+                tags:
+                  - "历史"
+                  - "文化"
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  spot:
+                    id: 1
+                    district_code: "110101"
+                    city_code: "110100"
+                    province_code: "110000"
+                    name: "天安门广场"
+                    short_name: "天安门"
+                    description: "位于北京市中心的天安门广场"
+                    category: 2
+                    longitude: 116.397128
+                    latitude: 39.903738
+                    pinyin: "tiananmenguangchang"
+                    pinyin_short: "tamgc"
+                    cover_image: "https://example.com/images/tiananmen.jpg"
+                    images:
+                      - "https://example.com/images/tiananmen1.jpg"
+                      - "https://example.com/images/tiananmen2.jpg"
+                    extra_data:
+                      opening_hours: "06:00"
+                      closing_hours: "22:00"
+                      ticket_price: 0
+                      contact_phone: "010-12345678"
+                      rating: 4.8
+                      visit_duration: 120
+                      best_season: "春季、秋季"
+                      tags:
+                        - "历史"
+                        - "文化"
+                    create_time: 1704067200
+                    update_time: 1704067200
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                err_code: -100001
+                msg: "param error"
+                detail: "地点名称不能为空"
+                data: null
+        '404':
+          description: 区/县地址不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                err_code: -100010
+                msg: "not found"
+                detail: "区/县地址不存在"
+                data: null
+
+  /address/spot/update:
+    post:
+      tags:
+        - Spot
+      summary: 更新地点
+      description: 更新地点信息，支持部分字段更新（只有非 nil 的字段才会更新）
+      operationId: updateSpot
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSpotReq'
+            example:
+              id: 1
+              district_code: "110101"
+              name: "天安门广场（更新）"
+              description: "更新后的描述信息"
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  spot:
+                    id: 1
+                    district_code: "110101"
+                    city_code: "110100"
+                    province_code: "110000"
+                    name: "天安门广场（更新）"
+                    short_name: "天安门"
+                    description: "更新后的描述信息"
+                    category: 2
+                    longitude: 116.397128
+                    latitude: 39.903738
+                    create_time: 1704067200
+                    update_time: 1704153600
+        '400':
+          description: 参数错误
+        '404':
+          description: 地点不存在
+
+  /address/spot/delete:
+    post:
+      tags:
+        - Spot
+      summary: 删除地点
+      description: 删除地点
+      operationId: deleteSpot
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteSpotReq'
+            example:
+              id: 1
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  success: true
+        '404':
+          description: 地点不存在
+
+  /address/spot/detail:
+    get:
+      tags:
+        - Spot
+      summary: 获取地点详情
+      description: 根据地点ID获取地点的详细信息
+      operationId: getSpotDetail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: 地点ID
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  district_code: "110101"
+                  city_code: "110100"
+                  province_code: "110000"
+                  name: "天安门广场"
+                  short_name: "天安门"
+                  description: "位于北京市中心的天安门广场"
+                  category: 2
+                  longitude: 116.397128
+                  latitude: 39.903738
+                  pinyin: "tiananmenguangchang"
+                  pinyin_short: "tamgc"
+                  cover_image: "https://example.com/images/tiananmen.jpg"
+                  images:
+                    - "https://example.com/images/tiananmen1.jpg"
+                    - "https://example.com/images/tiananmen2.jpg"
+                  extra_data:
+                    opening_hours: "06:00"
+                    closing_hours: "22:00"
+                    ticket_price: 0
+                    contact_phone: "010-12345678"
+                    rating: 4.8
+                    visit_duration: 120
+                    best_season: "春季、秋季"
+                    tags:
+                      - "历史"
+                      - "文化"
+                  create_time: 1704067200
+                  update_time: 1704067200
+        '404':
+          description: 地点不存在
+
+  /address/spot/detail/v2:
+    get:
+      tags:
+        - Spot
+      summary: 获取地点详情（V2，使用AI）
+      description: |
+        根据地址代码和景点名称，通过 AI 接口获取景点详细信息。
+        系统会根据地址代码自动获取省市区名称，拼接成"省-市-区-景点名称"格式，调用 AI 接口获取数据。
+      operationId: getSpotDetailV2
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: address_code
+          in: query
+          required: true
+          description: 地址代码（可以是省/市/区代码）
+          schema:
+            type: string
+            example: "440300"
+        - name: spot_name
+          in: query
+          required: true
+          description: 景点名称
+          schema:
+            type: string
+            example: "仙湖植物园"
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  introduction: "仙湖植物园集植物收集、研究、科学知识普及和旅游观光休闲为一体。园内有多样植物种类，还有弘法寺等人文景观，风景优美。"
+                  is_reservation: true
+                  official_url: "https://www.szzwy.org/"
+                  opening_hours: "08:00-18:00，全年无休"
+                  rating: "4.7"
+                  spot_address: "广东省深圳市罗湖区莲塘仙湖路160号"
+                  spot_pic_url: "https://img1.baidu.com/it/u=3771737364,1477773473&fm=26&fmt=auto&app=138&f=JPEG?w=500&h=375"
+                  spot_type: 1
+                  suggest_play_time: "半天"
+                  ticket_price: "免费（需预约），特殊展览可能单独收费"
+        '400':
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                err_code: -100001
+                msg: "param error"
+                detail: "address_code is required"
+                data: null
+        '404':
+          description: 地址不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                err_code: -100010
+                msg: "not found"
+                detail: "地址不存在"
+                data: null
+        '500':
+          description: AI 接口调用失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                err_code: -100020
+                msg: "external invoke error"
+                detail: "调用 AI 接口失败: ..."
+                data: null
+
+  /address/spot/search:
+    post:
+      tags:
+        - Spot
+      summary: 搜索地点
+      description: |
+        搜索地点，支持多种查询方式：
+        - 关键词搜索：支持名称、简称、拼音、拼音首字母、描述的模糊匹配
+        - 地址过滤：支持按省/市/区查询
+        - 分类过滤：按地点类型过滤
+        - 状态过滤：按启用/禁用状态过滤
+        - 附近查询：根据经纬度和半径查询附近的地点
+      operationId: searchSpot
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchSpotReq'
+            example:
+              keyword: "天安门"
+              province_code: "110000"
+              category: 2
+              offset: 0
+              size: 20
+      responses:
+        '200':
+          description: 搜索成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  offset: 0
+                  size: 20
+                  total: 1
+                  list:
+                    - id: 1
+                      district_code: "110101"
+                      city_code: "110100"
+                      province_code: "110000"
+                      name: "天安门广场"
+                      short_name: "天安门"
+                      description: "位于北京市中心的天安门广场"
+                      category: 2
+                      longitude: 116.397128
+                      latitude: 39.903738
+                      cover_image: "https://example.com/images/tiananmen.jpg"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Token 认证，格式：Bearer {token}
+
+  schemas:
+    StandardResponse:
+      type: object
+      properties:
+        err_code:
+          type: integer
+          format: int32
+          description: 错误码，0 表示成功，负数表示失败
+          example: 0
+        msg:
+          type: string
+          description: 错误消息或成功消息
+          example: "success"
+        detail:
+          type: string
+          description: 错误详情（可选，用于调试）
+          example: ""
+        data:
+          description: 业务数据，成功时返回，失败时为 null
+          oneOf:
+            - type: object
+            - type: array
+            - type: "null"
+
+    ErrorResponse:
+      type: object
+      properties:
+        err_code:
+          type: integer
+          format: int32
+          description: 错误码
+          example: -100001
+        msg:
+          type: string
+          description: 错误消息
+          example: "param error"
+        detail:
+          type: string
+          description: 错误详情
+          example: "地点名称不能为空"
+        data:
+          type: "null"
+          description: 失败时数据为 null
+
+    SearchAddressReq:
+      type: object
+      required:
+        - keyword
+      properties:
+        keyword:
+          type: string
+          description: 搜索关键词，支持名称、简称、拼音、拼音首字母、完整路径的模糊匹配（必填）
+          example: "北京"
+        offset:
+          type: integer
+          description: 偏移量，默认为 0，最小值为 0
+          default: 0
+          minimum: 0
+          example: 0
+        size:
+          type: integer
+          description: 每页大小，默认 20，最大 100
+          default: 20
+          minimum: 1
+          maximum: 100
+          example: 20
+        level:
+          type: integer
+          format: int8
+          description: |
+            地址级别过滤（可选）
+            1=国家, 2=省/直辖市/自治区, 3=市, 4=区/县
+          enum: [1, 2, 3, 4]
+          example: 2
+
+    SearchAddressResp:
+      type: object
+      properties:
+        offset:
+          type: integer
+          description: 偏移量
+          example: 0
+        size:
+          type: integer
+          description: 每页大小
+          example: 20
+        total:
+          type: integer
+          format: int64
+          description: 总数量
+          example: 1
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressListItem'
+          description: 地址列表
+
+    AddressListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 地址ID
+          example: 110000
+        parent_code:
+          type: string
+          description: 父级行政区划代码
+          example: ""
+        name:
+          type: string
+          description: 行政区划名称
+          example: "北京市"
+        short_name:
+          type: string
+          description: 简称/别名
+          example: "北京"
+        code:
+          type: string
+          description: 行政区划代码
+          example: "110000"
+        level:
+          type: integer
+          format: int8
+          description: 地址级别（1=国家，2=省，3=市，4=区/县）
+          enum: [1, 2, 3, 4]
+          example: 2
+        pinyin:
+          type: string
+          description: 拼音全拼
+          example: "beijingshi"
+        pinyin_short:
+          type: string
+          description: 拼音首字母缩写
+          example: "bjs"
+        full_path:
+          type: string
+          description: 完整路径
+          example: "北京市"
+        status:
+          type: integer
+          format: int8
+          description: 状态（1=启用）
+          example: 1
+
+    CreateSpotReq:
+      type: object
+      required:
+        - district_code
+        - name
+        - category
+      properties:
+        district_code:
+          type: string
+          description: 区/县代码（必填）
+          example: "110101"
+        name:
+          type: string
+          description: 地点名称（必填）
+          maxLength: 128
+          example: "天安门广场"
+        short_name:
+          type: string
+          description: 简称/别名
+          maxLength: 64
+          example: "天安门"
+        description:
+          type: string
+          description: 地点描述
+          example: "位于北京市中心的天安门广场"
+        category:
+          type: integer
+          format: int8
+          description: |
+            地点类型（必填）
+            1=自然景观, 2=人文景观, 3=历史古迹, 4=现代建筑, 5=主题公园,
+            6=博物馆, 7=餐厅美食, 8=购物场所, 9=市场/集市, 10=公园广场, 99=其他
+          enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 99]
+          example: 2
+        longitude:
+          type: number
+          format: double
+          description: 经度
+          example: 116.397128
+        latitude:
+          type: number
+          format: double
+          description: 纬度
+          example: 39.903738
+        pinyin:
+          type: string
+          description: 拼音全拼
+          maxLength: 256
+          example: "tiananmenguangchang"
+        pinyin_short:
+          type: string
+          description: 拼音首字母缩写
+          maxLength: 64
+          example: "tamgc"
+        cover_image:
+          type: string
+          description: 封面图片URL
+          maxLength: 512
+          example: "https://example.com/images/tiananmen.jpg"
+        images:
+          type: array
+          items:
+            type: string
+          description: 图片列表
+          example:
+            - "https://example.com/images/tiananmen1.jpg"
+            - "https://example.com/images/tiananmen2.jpg"
+        extra_data:
+          $ref: '#/components/schemas/SpotExtraData'
+
+    UpdateSpotReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 地点ID（必填）
+          example: 1
+        district_code:
+          type: string
+          description: 区/县代码（可选，更新时会自动获取省市区信息）
+          example: "110101"
+        name:
+          type: string
+          description: 地点名称（可选）
+          maxLength: 128
+          example: "天安门广场（更新）"
+        short_name:
+          type: string
+          description: 简称/别名（可选）
+          maxLength: 64
+          example: "天安门"
+        description:
+          type: string
+          description: 地点描述（可选）
+          example: "更新后的描述信息"
+        category:
+          type: integer
+          format: int8
+          description: 地点类型（可选）
+          enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 99]
+          example: 2
+        longitude:
+          type: number
+          format: double
+          description: 经度（可选）
+          example: 116.397128
+        latitude:
+          type: number
+          format: double
+          description: 纬度（可选）
+          example: 39.903738
+        pinyin:
+          type: string
+          description: 拼音全拼（可选）
+          maxLength: 256
+          example: "tiananmenguangchang"
+        pinyin_short:
+          type: string
+          description: 拼音首字母缩写（可选）
+          maxLength: 64
+          example: "tamgc"
+        cover_image:
+          type: string
+          description: 封面图片URL（可选）
+          maxLength: 512
+          example: "https://example.com/images/tiananmen.jpg"
+        images:
+          type: array
+          items:
+            type: string
+          description: 图片列表（可选）
+        extra_data:
+          $ref: '#/components/schemas/SpotExtraData'
+
+    DeleteSpotReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 地点ID（必填）
+          example: 1
+
+    SearchSpotReq:
+      type: object
+      properties:
+        keyword:
+          type: string
+          description: 搜索关键词，支持名称、简称、拼音、拼音首字母、描述的模糊匹配
+          example: "天安门"
+        province_code:
+          type: string
+          description: 省代码过滤
+          example: "110000"
+        city_code:
+          type: string
+          description: 市代码过滤
+          example: "110100"
+        district_code:
+          type: string
+          description: 区/县代码过滤
+          example: "110101"
+        category:
+          type: integer
+          format: int8
+          description: 地点类型过滤
+          enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 99]
+          example: 2
+        longitude:
+          type: number
+          format: double
+          description: 经度（用于附近查询）
+          example: 116.397128
+        latitude:
+          type: number
+          format: double
+          description: 纬度（用于附近查询）
+          example: 39.903738
+        radius:
+          type: number
+          format: double
+          description: 搜索半径（公里，用于附近查询）
+          example: 5.0
+        offset:
+          type: integer
+          description: 偏移量，默认为 0，最小值为 0
+          default: 0
+          minimum: 0
+          example: 0
+        size:
+          type: integer
+          description: 每页大小，默认 20，最大 100
+          default: 20
+          minimum: 1
+          maximum: 100
+          example: 20
+
+    SpotDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 地点ID
+          example: 1
+        district_code:
+          type: string
+          description: 区/县代码
+          example: "110101"
+        city_code:
+          type: string
+          description: 市代码
+          example: "110100"
+        province_code:
+          type: string
+          description: 省代码
+          example: "110000"
+        name:
+          type: string
+          description: 地点名称
+          example: "天安门广场"
+        short_name:
+          type: string
+          description: 简称/别名
+          example: "天安门"
+        description:
+          type: string
+          description: 地点描述
+          example: "位于北京市中心的天安门广场"
+        category:
+          type: integer
+          format: int8
+          description: 地点类型
+          enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 99]
+          example: 2
+        longitude:
+          type: number
+          format: double
+          description: 经度
+          example: 116.397128
+        latitude:
+          type: number
+          format: double
+          description: 纬度
+          example: 39.903738
+        pinyin:
+          type: string
+          description: 拼音全拼
+          example: "tiananmenguangchang"
+        pinyin_short:
+          type: string
+          description: 拼音首字母缩写
+          example: "tamgc"
+        cover_image:
+          type: string
+          description: 封面图片URL
+          example: "https://example.com/images/tiananmen.jpg"
+        images:
+          type: array
+          items:
+            type: string
+          description: 图片列表
+          example:
+            - "https://example.com/images/tiananmen1.jpg"
+            - "https://example.com/images/tiananmen2.jpg"
+        extra_data:
+          $ref: '#/components/schemas/SpotExtraData'
+        create_time:
+          type: integer
+          format: int64
+          description: 创建时间（Unix 时间戳，秒）
+          example: 1704067200
+        update_time:
+          type: integer
+          format: int64
+          description: 更新时间（Unix 时间戳，秒）
+          example: 1704067200
+
+    SpotListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 地点ID
+          example: 1
+        district_code:
+          type: string
+          description: 区/县代码
+          example: "110101"
+        city_code:
+          type: string
+          description: 市代码
+          example: "110100"
+        province_code:
+          type: string
+          description: 省代码
+          example: "110000"
+        name:
+          type: string
+          description: 地点名称
+          example: "天安门广场"
+        short_name:
+          type: string
+          description: 简称/别名
+          example: "天安门"
+        description:
+          type: string
+          description: 地点描述
+          example: "位于北京市中心的天安门广场"
+        category:
+          type: integer
+          format: int8
+          description: 地点类型
+          enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 99]
+          example: 2
+        longitude:
+          type: number
+          format: double
+          description: 经度
+          example: 116.397128
+        latitude:
+          type: number
+          format: double
+          description: 纬度
+          example: 39.903738
+        cover_image:
+          type: string
+          description: 封面图片URL
+          example: "https://example.com/images/tiananmen.jpg"
+
+    SpotExtraData:
+      type: object
+      description: 地点扩展数据
+      properties:
+        opening_hours:
+          type: string
+          description: 开放时间
+          example: "06:00"
+        closing_hours:
+          type: string
+          description: 关闭时间
+          example: "22:00"
+        ticket_price:
+          type: number
+          format: double
+          description: 门票价格
+          example: 0
+        contact_phone:
+          type: string
+          description: 联系电话
+          example: "010-12345678"
+        contact_address:
+          type: string
+          description: 联系地址
+          example: "北京市东城区天安门广场"
+        website:
+          type: string
+          description: 官方网站
+          example: "https://www.example.com"
+        rating:
+          type: number
+          format: double
+          description: 评分（0-5）
+          minimum: 0
+          maximum: 5
+          example: 4.8
+        visit_duration:
+          type: integer
+          description: 建议游览时长（分钟）
+          example: 120
+        best_season:
+          type: string
+          description: 最佳游览季节
+          example: "春季、秋季"
+        tags:
+          type: array
+          items:
+            type: string
+          description: 标签
+          example:
+            - "历史"
+            - "文化"
+
+    SearchSpotResp:
+      type: object
+      properties:
+        offset:
+          type: integer
+          description: 偏移量
+          example: 0
+        size:
+          type: integer
+          description: 每页大小
+          example: 20
+        total:
+          type: integer
+          format: int64
+          description: 总数量
+          example: 1
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpotListItem'
+          description: 地点列表
+
+    GetSpotDetailV2Req:
+      type: object
+      required:
+        - address_code
+        - spot_name
+      properties:
+        address_code:
+          type: string
+          description: 地址代码（必填，可以是省/市/区代码）
+          example: "440300"
+        spot_name:
+          type: string
+          description: 景点名称（必填）
+          example: "仙湖植物园"
+
+    GetSpotDetailV2Resp:
+      type: object
+      properties:
+        introduction:
+          type: string
+          description: 景点介绍
+          example: "仙湖植物园集植物收集、研究、科学知识普及和旅游观光休闲为一体。园内有多样植物种类，还有弘法寺等人文景观，风景优美。"
+        is_reservation:
+          type: boolean
+          description: 是否需要预约
+          example: true
+        official_url:
+          type: string
+          description: 官方网站
+          example: "https://www.szzwy.org/"
+        opening_hours:
+          type: string
+          description: 开放时间
+          example: "08:00-18:00，全年无休"
+        rating:
+          type: string
+          description: 评分
+          example: "4.7"
+        spot_address:
+          type: string
+          description: 景点地址
+          example: "广东省深圳市罗湖区莲塘仙湖路160号"
+        spot_pic_url:
+          type: string
+          description: 景点图片URL
+          example: "https://img1.baidu.com/it/u=3771737364,1477773473&fm=26&fmt=auto&app=138&f=JPEG?w=500&h=375"
+        spot_type:
+          type: integer
+          format: int8
+          description: |
+            景点类型
+            1=自然景观, 2=人文景观, 3=历史古迹, 4=现代建筑, 5=主题公园,
+            6=博物馆, 7=餐厅美食, 8=购物场所, 9=市场/集市, 10=公园广场, 99=其他
+          enum: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 99]
+          example: 1
+        suggest_play_time:
+          type: string
+          description: 建议游玩时间
+          example: "半天"
+        ticket_price:
+          type: string
+          description: 门票价格
+          example: "免费（需预约），特殊展览可能单独收费"
+
