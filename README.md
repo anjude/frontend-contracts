@@ -2,6 +2,8 @@
 
 前端共享契约仓。这里统一维护 OpenAPI 契约与可复制到各前端项目的 TypeScript 类型/接口文件。
 
+默认分支为 `master`。
+
 ## 目录约定
 
 - `openapi/`：OpenAPI 契约源文件。
