@@ -18,6 +18,9 @@ export namespace CarbonApi {
     creatorOpenid: string
     name: string
     status: CarbonSpaceStatus
+    dormantTime: number
+    dissolvedTime: number
+    dissolvedByOpenid: string
     memberCount: number
     extraData?: Record<string, unknown>
     createTime: number
@@ -163,6 +166,14 @@ export namespace CarbonApi {
   }
 
   export interface DeleteSpaceResp {
+    spaceId: number
+  }
+
+  export interface RecoverSpaceReq {
+    spaceId: number
+  }
+
+  export interface RecoverSpaceResp {
     spaceId: number
   }
 

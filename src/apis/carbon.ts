@@ -6,6 +6,7 @@ export const carbonApiPaths = {
   createSpace: 'POST /api/so/carbon/space/create',
   updateSpace: 'POST /api/so/carbon/space/update',
   deleteSpace: 'POST /api/so/carbon/space/delete',
+  recoverSpace: 'POST /api/so/carbon/space/recover',
   setDefaultSpace: 'POST /api/so/carbon/space/default/set',
   getSpaceDetail: 'GET /api/so/carbon/space/detail',
   createInvite: 'POST /api/so/carbon/invite/create',

@@ -651,12 +651,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SubscribeMsgReq'
-            example:
-              message_tmp_id: "template_id_123"
-              content: "消息内容"
-              msg_type: 1
-              trigger_time: 1704067200
-              enter_page: "/pages/index/index"
+              example:
+                message_tmp_id: "template_id_123"
+                content: "消息内容"
+                msg_type: 1
+                trigger_time: 1704067200
+                enter_page: "/pages/index/index"
+                relation_id: 123
       responses:
         '200':
           description: 订阅成功
@@ -1017,9 +1018,9 @@ components:
           format: int8
           description: |
             消息类型（必填）
-            1=周报打卡提醒, 2=Item提醒消息
-          enum: [1, 2]
-          example: 1
+              1=周报打卡提醒, 2=Item提醒消息, 3=Carbon空间恢复提醒
+            enum: [1, 2, 3]
+            example: 1
         trigger_time:
           type: integer
           format: uint32
@@ -1029,6 +1030,11 @@ components:
           type: string
           description: 进入页面（可选，默认为 "/pages/index/index"）
           example: "/pages/index/index"
+        relation_id:
+          type: integer
+          format: int64
+          description: 关联ID（可选，如 space_id / item_id）
+          example: 123
 
     GetCodeReq:
       type: object

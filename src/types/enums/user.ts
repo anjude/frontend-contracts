@@ -15,7 +15,8 @@ export const VerifyType = {
 export type VerifyType = (typeof VerifyType)[keyof typeof VerifyType]
 
 export const SubscribeMsgType = {
-  System: 1,
-  Reminder: 2,
+  WeeklyCheckin: 1,
+  ItemRemind: 2,
+  CarbonSpaceRecover: 3,
 } as const
 export type SubscribeMsgType = (typeof SubscribeMsgType)[keyof typeof SubscribeMsgType]

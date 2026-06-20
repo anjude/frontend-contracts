@@ -67,7 +67,7 @@ paths:
     post:
       tags: [Carbon]
       summary: 删除空间
-      description: 仅空间创建者可删除；删除后立即硬删除空间、成员、邀请、此刻等相关数据。
+      description: 空间成员均可触发删除；删除后空间进入 dormant 状态，前端继续可见但应展示全局遮罩，30 天后由定时任务转为 deleted，期间不物理删除数据。
       security:
         - BearerAuth: []
       requestBody:
@@ -75,6 +75,21 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/DeleteSpaceReq'
+      responses:
+        '200':
+          description: success
+  /carbon/space/recover:
+    post:
+      tags: [Carbon]
+      summary: 恢复空间
+      description: 空间成员均可恢复 dormant 状态的空间；恢复后空间重新进入 active 状态，并向已订阅恢复提醒的成员即时发送订阅消息，不走定时任务。
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoverSpaceReq'
       responses:
         '200':
           description: success
@@ -498,6 +513,17 @@ components:
           type: string
         status:
           type: integer
+          enum: [1, 2, 3]
+          description: 1-active 2-dormant 3-deleted；前端应继续展示 dormant 空间，但对 deleted 空间做不可见处理
+        dormant_time:
+          type: integer
+          description: 进入休眠时间，Unix 时间戳，秒
+        dissolved_time:
+          type: integer
+          description: 进入消散流程时间，Unix 时间戳，秒；定时任务基于该时间判断 30 天后归档
+        dissolved_by_openid:
+          type: string
+          description: 触发空间进入删除流程的成员 OpenID
         member_count:
           type: integer
         create_time:
@@ -649,6 +675,12 @@ components:
         name:
           type: string
     DeleteSpaceReq:
+      type: object
+      required: [space_id]
+      properties:
+        space_id:
+          type: integer
+    RecoverSpaceReq:
       type: object
       required: [space_id]
       properties:
