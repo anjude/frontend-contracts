@@ -479,6 +479,81 @@ paths:
       responses:
         '200':
           description: success
+  /carbon/boundary/list:
+    post:
+      tags: [Carbon]
+      summary: 获取边界列表
+      description: 返回当前空间内全部成员的边界；后端按 space_id 拉取后，前端按 openid 拆分为「我的」与「对方的」两份视图。
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoundaryListReq'
+      responses:
+        '200':
+          description: success
+  /carbon/boundary/create:
+    post:
+      tags: [Carbon]
+      summary: 创建边界
+      description: 仅空间成员可写；category 取值 1-底线 2-喜欢 3-不喜欢。
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBoundaryReq'
+      responses:
+        '200':
+          description: success
+  /carbon/boundary/update:
+    post:
+      tags: [Carbon]
+      summary: 更新边界
+      description: 仅作者可改；category 不传则保留原值。
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBoundaryReq'
+      responses:
+        '200':
+          description: success
+  /carbon/boundary/react:
+    post:
+      tags: [Carbon]
+      summary: 对方对边界表态
+      description: 仅非作者（边界主人之外的一方）可表态；可重复点击在「懂了 / 还需磨合」间切换。
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactBoundaryReq'
+      responses:
+        '200':
+          description: success
+  /carbon/boundary/delete:
+    post:
+      tags: [Carbon]
+      summary: 删除边界
+      description: 仅作者可删除自己写的边界。
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoundaryIDReq'
+      responses:
+        '200':
+          description: success
 components:
   securitySchemes:
     BearerAuth:
@@ -925,3 +1000,119 @@ components:
       properties:
         id:
           type: integer
+    BoundaryView:
+      type: object
+      properties:
+        id:
+          type: integer
+        space_id:
+          type: integer
+        openid:
+          type: string
+          description: 作者 OpenID，前端据此拆分为「我的 / 对方的」视图
+        category:
+          type: integer
+          enum: [1, 2, 3]
+          description: 1-底线 2-喜欢 3-不喜欢
+        category_text:
+          type: string
+          description: 分类中文，由后端根据 category 生成
+        content:
+          type: string
+        partner_reaction:
+          type: integer
+          enum: [0, 1, 2]
+          description: 0-未表态 1-懂了 2-还需磨合
+        partner_reaction_text:
+          type: string
+          description: 对方表态中文，由后端生成
+        create_time:
+          type: integer
+        update_time:
+          type: integer
+    BoundaryListReq:
+      type: object
+      required: [space_id]
+      properties:
+        space_id:
+          type: integer
+        category:
+          type: integer
+          enum: [1, 2, 3]
+          description: 可选，不传则返回全部分类
+        offset:
+          type: integer
+        size:
+          type: integer
+    BoundaryListResp:
+      type: object
+      properties:
+        offset:
+          type: integer
+        size:
+          type: integer
+        total:
+          type: integer
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoundaryView'
+    CreateBoundaryReq:
+      type: object
+      required: [space_id, category, content]
+      properties:
+        space_id:
+          type: integer
+        category:
+          type: integer
+          enum: [1, 2, 3]
+          description: 1-底线 2-喜欢 3-不喜欢
+        content:
+          type: string
+          maxLength: 50
+          description: 边界内容，最多 50 字
+    CreateBoundaryResp:
+      type: object
+      properties:
+        boundary:
+          $ref: '#/components/schemas/BoundaryView'
+    BoundaryIDReq:
+      type: object
+      required: [boundary_id]
+      properties:
+        boundary_id:
+          type: integer
+    UpdateBoundaryReq:
+      type: object
+      required: [boundary_id, content]
+      properties:
+        boundary_id:
+          type: integer
+        category:
+          type: integer
+          enum: [1, 2, 3]
+          description: 可选，不传则保留原分类
+        content:
+          type: string
+          maxLength: 50
+          description: 边界内容，最多 50 字
+    UpdateBoundaryResp:
+      type: object
+      properties:
+        boundary:
+          $ref: '#/components/schemas/BoundaryView'
+    ReactBoundaryReq:
+      type: object
+      required: [boundary_id]
+      properties:
+        boundary_id:
+          type: integer
+        reaction:
+          type: integer
+          enum: [1, 2]
+          description: 1-懂了 2-还需磨合
+    ReactBoundaryResp:
+      type: object
+      properties:
+        boundary:
+          $ref: '#/components/schemas/BoundaryView'
