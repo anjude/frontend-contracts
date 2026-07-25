@@ -498,7 +498,7 @@ paths:
     post:
       tags: [Carbon]
       summary: 创建边界
-      description: 仅空间成员可写；category 取值 1-底线 2-喜欢 3-不喜欢。
+      description: 仅空间成员可写；category 取值 1-底线 2-喜欢 3-不喜欢 4-我会做。我会做类目需传 item_type（1-承诺 2-习惯），visible_to_partner 可选（默认 1-展示，0-仅自己可见）。
       security:
         - BearerAuth: []
       requestBody:
@@ -528,7 +528,7 @@ paths:
     post:
       tags: [Carbon]
       summary: 对方对边界表态
-      description: 仅非作者（边界主人之外的一方）可表态；可重复点击在「懂了 / 还需磨合」间切换。
+      description: 仅非作者（边界主人之外的一方）可表态；可重复点击在两类表态间切换（底线/喜欢/不喜欢为「懂了/还需磨合」，我会做为「收到/一起」）；对 visible_to_partner=0 的条目不可表态。
       security:
         - BearerAuth: []
       requestBody:
@@ -1012,13 +1012,24 @@ components:
           description: 作者 OpenID，前端据此拆分为「我的 / 对方的」视图
         category:
           type: integer
-          enum: [1, 2, 3]
-          description: 1-底线 2-喜欢 3-不喜欢
+          enum: [1, 2, 3, 4]
+          description: 1-底线 2-喜欢 3-不喜欢 4-我会做
         category_text:
           type: string
           description: 分类中文，由后端根据 category 生成
         content:
           type: string
+        item_type:
+          type: integer
+          enum: [0, 1, 2]
+          description: 仅我会做类目使用 0-无 1-承诺 2-习惯
+        item_type_text:
+          type: string
+          description: 条目类型中文，由后端生成；非我会做类目为空
+        visible_to_partner:
+          type: integer
+          enum: [0, 1]
+          description: 是否对对方展示 1-展示 0-仅自己可见；仅我会做类目可设置为 0
         partner_reaction:
           type: integer
           enum: [0, 1, 2]
@@ -1038,8 +1049,8 @@ components:
           type: integer
         category:
           type: integer
-          enum: [1, 2, 3]
-          description: 可选，不传则返回全部分类
+          enum: [1, 2, 3, 4]
+          description: 可选，不传则返回全部分类；4 为我会做
         offset:
           type: integer
         size:
@@ -1065,12 +1076,20 @@ components:
           type: integer
         category:
           type: integer
-          enum: [1, 2, 3]
-          description: 1-底线 2-喜欢 3-不喜欢
+          enum: [1, 2, 3, 4]
+          description: 1-底线 2-喜欢 3-不喜欢 4-我会做
         content:
           type: string
           maxLength: 50
           description: 边界内容，最多 50 字
+        item_type:
+          type: integer
+          enum: [1, 2]
+          description: 仅我会做类目必传 1-承诺 2-习惯
+        visible_to_partner:
+          type: integer
+          enum: [0, 1]
+          description: 是否对对方展示 1-展示（默认）0-仅自己可见；仅我会做类目生效
     CreateBoundaryResp:
       type: object
       properties:
@@ -1090,12 +1109,20 @@ components:
           type: integer
         category:
           type: integer
-          enum: [1, 2, 3]
-          description: 可选，不传则保留原分类
+          enum: [1, 2, 3, 4]
+          description: 可选，不传则保留原分类；4 为我会做
         content:
           type: string
           maxLength: 50
           description: 边界内容，最多 50 字
+        item_type:
+          type: integer
+          enum: [1, 2]
+          description: 仅我会做类目使用 1-承诺 2-习惯；非我会做类目忽略
+        visible_to_partner:
+          type: integer
+          enum: [0, 1]
+          description: 是否对对方展示 1-展示 0-仅自己可见；仅我会做类目生效
     UpdateBoundaryResp:
       type: object
       properties:
