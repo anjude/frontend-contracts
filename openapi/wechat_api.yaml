@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  title: WeChat Official Account API
+  version: 1.0.0
+servers:
+  - url: /api/so
+tags:
+  - name: WeChat
+paths:
+  /wechat/article/draft:
+    post:
+      tags: [WeChat]
+      summary: 新增公众号草稿（草稿箱）
+      description: |
+        调用微信 cgi-bin/draft/add，将文章推入公众号草稿箱（非群发）。
+        正文 content 为微信可识别的 HTML；也可传 content_markdown 由后端 goldmark 转 HTML。
+        封面传 thumb_media_id 直接复用，或传 cover_url 由后端下载后上传为永久素材拿 media_id。
+        auto_upload_images=true 时，正文外链图片自动下载并上传微信图床后改写 src。
+        目标公众号凭证来自后端配置 wechat_mp_config，请求无需传 app_id。
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWechatDraftReq'
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateWechatDraftResp'
+  /wechat/material/image:
+    post:
+      tags: [WeChat]
+      summary: 上传永久图片素材（封面用）
+      description: |
+        调用微信 cgi-bin/material/add_material?type=image，返回 media_id 与 url。
+        可传 multipart 文件（字段 file），或传表单字段 url（远程图片地址）。
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 图片文件
+                url:
+                  type: string
+                  description: 远程图片地址（与 file 二选一）
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadWechatMaterialResp'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    CreateWechatDraftReq:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: 标题
+        author:
+          type: string
+          description: 作者
+        digest:
+          type: string
+          description: 摘要（草稿列表展示）
+        content:
+          type: string
+          description: 正文 HTML（与 content_markdown 二选一，优先）
+        content_markdown:
+          type: string
+          description: 正文 Markdown（后端转 HTML）
+        content_source_url:
+          type: string
+          description: 原文链接
+        cover_url:
+          type: string
+          description: 封面远程地址（与 thumb_media_id 二选一）
+        thumb_media_id:
+          type: string
+          description: 封面永久素材 media_id（优先）
+        need_open_comment:
+          type: integer
+          description: 是否打开评论 0/1
+        only_fans_can_comment:
+          type: integer
+          description: 是否仅粉丝可评论 0/1
+        auto_upload_images:
+          type: boolean
+          description: 是否自动将正文外链图片上传微信图床并改写
+    CreateWechatDraftResp:
+      type: object
+      properties:
+        media_id:
+          type: string
+          description: 草稿 media_id
+    UploadWechatMaterialResp:
+      type: object
+      properties:
+        media_id:
+          type: string
+          description: 永久素材 media_id
+        url:
+          type: string
+          description: 素材 url
