@@ -1,7 +1,6 @@
 export { userApiPaths } from './user'
 export { commonApiPaths } from './common'
 export { checklistApiPaths } from './checklist'
-export { stockApiPaths } from './stock'
 export { messageSubscribeApiPaths } from './message-subscribe'
 export { addressApiPaths } from './address'
 export { tripApiPaths } from './trip'
