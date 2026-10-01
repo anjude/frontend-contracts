@@ -9,6 +9,7 @@ tags:
 paths:
   /wechat/article/draft:
     post:
+      operationId: createWechatDraft
       tags: [WeChat]
       summary: 新增公众号草稿（草稿箱）
       description: |
@@ -34,6 +35,7 @@ paths:
                 $ref: '#/components/schemas/CreateWechatDraftResp'
   /wechat/material/image:
     post:
+      operationId: uploadWechatMaterial
       tags: [WeChat]
       summary: 上传永久图片素材（封面用）
       description: |

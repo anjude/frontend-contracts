@@ -4,3 +4,6 @@ dist/
 
 # 契约仓以源码被 submodule 引入，消费端不会 npm install 它，无需提交锁文件
 package-lock.json
+
+# IDE
+.idea/

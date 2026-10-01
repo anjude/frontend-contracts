@@ -162,6 +162,7 @@ function main() {
     'plan_api.yaml',
     'item_api.yaml',
     'message_subscribe_api.yaml',
+    'wechat_api.yaml',
   ]
   const apiExports = []
   for (const f of files) {
