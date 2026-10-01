@@ -19,8 +19,8 @@ import yaml from 'js-yaml'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const OPENAPI_DIR = path.join(ROOT, 'openapi')
-const TYPES_API_DIR = path.join(ROOT, 'src', 'types')
-const APIS_DIR = path.join(ROOT, 'src', 'apis')
+const TYPES_API_DIR = path.join(ROOT, 'types')
+const APIS_DIR = path.join(ROOT, 'apis')
 
 // operationId -> 非约定命名的响应类型（yaml 信封层无法表达，手写覆盖）
 const OVERRIDES = {
