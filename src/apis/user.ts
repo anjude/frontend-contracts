@@ -1,4 +1,4 @@
-import type { UserApi } from '../types/api/user'
+import type { UserApi } from '../types/user'
 import type { HttpClient, RequestOptions } from '../request/client'
 
 export const UserApiPaths = {

@@ -19,7 +19,7 @@ import yaml from 'js-yaml'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const OPENAPI_DIR = path.join(ROOT, 'openapi')
-const TYPES_API_DIR = path.join(ROOT, 'src', 'types', 'api')
+const TYPES_API_DIR = path.join(ROOT, 'src', 'types')
 const APIS_DIR = path.join(ROOT, 'src', 'apis')
 
 // operationId -> 非约定命名的响应类型（yaml 信封层无法表达，手写覆盖）
@@ -126,7 +126,7 @@ function emitApi(domain, ns, entries) {
   const constName = `${ident(domain)}ApiPaths`
   const factoryName = `create${ident(domain)}Api`
   const L = []
-  L.push(`import type { ${ns} } from '../types/api/${domain}'`)
+  L.push(`import type { ${ns} } from '../types/${domain}'`)
   L.push(`import type { HttpClient, RequestOptions } from '../request/client'`)
   L.push('')
   L.push(`export const ${constName} = {`)

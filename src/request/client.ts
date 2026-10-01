@@ -1,4 +1,4 @@
-import type { ApiResponse } from '../types/api/base'
+import type { ApiResponse } from '../types/base'
 
 // 框架无关的 HTTP 客户端契约。
 // 各前端（superone / carbon）用自己的 request 层实现它，

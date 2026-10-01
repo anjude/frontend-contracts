@@ -1,4 +1,23 @@
-import type { TopicLogMark, TopicType } from '../enums/topic'
+export const TopicType = {
+  Topic: 1,
+  Stock: 2,
+  Item: 3,
+  Feedback: 4,
+  RecentTask: 5,
+  BeanFlow: 6,
+  PublicFlow: 7,
+  Goal: 8,
+  CarbonFeedback: 9,
+  CarbonAgreement: 10,
+  CarbonScale: 11,
+} as const
+export type TopicType = (typeof TopicType)[keyof typeof TopicType]
+
+export const TopicLogMark = {
+  Normal: 1,
+} as const
+export type TopicLogMark = (typeof TopicLogMark)[keyof typeof TopicLogMark]
+
 export namespace TopicApi {
   export interface TopicListItem {
     id: number
