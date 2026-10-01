@@ -1,0 +1,15 @@
+{
+  "name": "frontend-contracts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "前后端契约源：OpenAPI yaml + 类型 + 可调用 client，供前端以 submodule 方式直接引入",
+  "scripts": {
+    "gen": "node scripts/gen.mjs",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "js-yaml": "^4.1.0",
+    "typescript": "^5.4.0"
+  }
+}
