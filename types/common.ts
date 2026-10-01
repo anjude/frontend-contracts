@@ -49,6 +49,8 @@ export namespace CommonApi {
     scene: string
     checkPath?: boolean
     envVersion: string
+    /** 指定生成哪个小程序的码，不传用当前上下文的 appId */
+    appId?: string
   }
 
   export interface MpQrcodeResp {
@@ -191,6 +193,8 @@ export namespace CommonApi {
   export interface SetFeRedisReq {
     redisKey: string
     redisValue: string
+    /** 过期秒数，不传按后端默认 */
+    expireSeconds?: number
   }
 
   export interface DelFeRedisReq {

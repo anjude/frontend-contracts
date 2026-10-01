@@ -1,0 +1,426 @@
+openapi: 3.0.3
+info:
+  title: Item API - 物品管理接口
+  description: |
+    物品管理相关接口，包括：
+    - 物品管理：创建、查询、更新、删除物品，支持分类/状态/标签筛选
+    - 物品分类：获取分类列表（图标、颜色）
+
+    ## 认证方式
+    所有接口需要在请求头中携带 JWT Token：
+    ```
+    Authorization: Bearer {your_jwt_token}
+    ```
+
+    ## 响应格式
+    所有接口遵循统一的响应格式：
+    ```json
+    {
+      "err_code": 0,
+      "msg": "success",
+      "detail": "",
+      "data": {}
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: Backend Superone API Support
+
+servers:
+  - url: /api/so
+    description: API 基础路径
+
+tags:
+  - name: Item
+    description: 物品管理接口
+  - name: ItemCategory
+    description: 物品分类接口
+
+paths:
+  /item/list:
+    post:
+      tags:
+        - Item
+      summary: 获取物品列表
+      description: 分页获取物品列表，支持关键词、分类、状态、标签筛选
+      operationId: getItemList
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetItemListReq'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  offset: 0
+                  size: 20
+                  total: 1
+                  list:
+                    - id: 1
+                      name: "MacBook Pro"
+                      category: 1
+                      status: 1
+        '400':
+          description: 参数错误
+
+  /item/detail:
+    get:
+      tags:
+        - Item
+      summary: 获取物品详情
+      description: 根据物品ID获取物品详情
+      operationId: getItemDetail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: 物品ID
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  name: "MacBook Pro"
+                  category: 1
+                  status: 1
+                  tags: ["笔记备本"]
+        '400':
+          description: 参数错误
+
+  /item/create:
+    post:
+      tags:
+        - Item
+      summary: 创建物品
+      description: 创建一条物品记录
+      operationId: createItem
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItemReq'
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  name: "MacBook Pro"
+        '400':
+          description: 参数错误
+
+  /item/update:
+    post:
+      tags:
+        - Item
+      summary: 更新物品
+      description: 部分更新物品，只有传递的字段才会更新
+      operationId: updateItem
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItemReq'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 1
+                  name: "新名称"
+        '400':
+          description: 参数错误
+
+  /item/delete:
+    post:
+      tags:
+        - Item
+      summary: 删除物品
+      description: 根据物品ID删除物品
+      operationId: deleteItem
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteItemReq'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  success: true
+        '400':
+          description: 参数错误
+
+  /item/category/list:
+    get:
+      tags:
+        - ItemCategory
+      summary: 获取物品分类列表
+      description: 获取全部物品分类（含图标与颜色），无入参
+      operationId: getItemCategoryList
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  list:
+                    - id: 1
+                      name: "电子产品"
+                      icon: "📱"
+                      color: "#07C160"
+        '400':
+          description: 参数错误
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Token 认证
+
+  schemas:
+    StandardResponse:
+      type: object
+      required:
+        - err_code
+        - msg
+        - detail
+      properties:
+        err_code:
+          type: integer
+          format: int32
+          description: 错误码，0 表示成功，负数表示失败
+          example: 0
+        msg:
+          type: string
+          description: 提示信息
+          example: "success"
+        detail:
+          type: string
+          description: 错误详情，成功时为空字符串
+          example: ""
+        data:
+          description: 业务数据，具体结构在各接口的 example 中给出
+          oneOf:
+            - type: object
+            - type: array
+            - type: 'null'
+
+    ItemStatus:
+      type: integer
+      description: 物品状态，1=使用中 2=闲置 3=损坏 4=丢失 5=已出售 6=已赠送 7=已回收
+      enum: [1, 2, 3, 4, 5, 6, 7]
+      example: 1
+
+    ItemCategory:
+      type: integer
+      description: 物品分类，0=默认 1=电子产品 2=服装 3=图书 4=家居 5=运动 6=美妆 7=食品 8=工具 9=其他
+      enum: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      example: 1
+
+    GetItemListReq:
+      type: object
+      properties:
+        offset:
+          type: integer
+          description: 偏移量
+          example: 0
+        size:
+          type: integer
+          description: 每页数量
+          example: 20
+        keyword:
+          type: string
+          description: 关键词搜索
+          example: ""
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        status:
+          $ref: '#/components/schemas/ItemStatus'
+        tags:
+          type: array
+          description: 标签筛选
+          items:
+            type: string
+
+    CreateItemReq:
+      type: object
+      required:
+        - name
+        - status
+        - start_time
+      properties:
+        name:
+          type: string
+          maxLength: 128
+          description: 物品名称
+          example: "MacBook Pro"
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        status:
+          $ref: '#/components/schemas/ItemStatus'
+        tags:
+          type: array
+          description: 标签
+          items:
+            type: string
+        start_time:
+          type: integer
+          format: int64
+          description: 开始时间
+          example: 1735660800
+        description:
+          type: string
+          maxLength: 5000
+          description: 描述
+          example: ""
+        logo:
+          type: string
+          maxLength: 512
+          description: Logo 地址
+          example: ""
+        price:
+          type: string
+          description: 价格，后端为 decimal，序列化为字符串
+          example: "12999.00"
+        remind_time:
+          type: integer
+          format: int64
+          description: 提醒时间
+          example: 1767225600
+        remind_content:
+          type: string
+          maxLength: 500
+          description: 提醒内容
+          example: ""
+
+    UpdateItemReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 物品ID
+          example: 1
+        name:
+          type: string
+          maxLength: 128
+          description: 物品名称（可选）
+          example: "新名称"
+        category:
+          $ref: '#/components/schemas/ItemCategory'
+        status:
+          $ref: '#/components/schemas/ItemStatus'
+        tags:
+          type: array
+          description: 标签（可选）
+          items:
+            type: string
+        start_time:
+          type: integer
+          format: int64
+          description: 开始时间（可选）
+        description:
+          type: string
+          maxLength: 5000
+          description: 描述（可选）
+        logo:
+          type: string
+          maxLength: 512
+          description: Logo 地址（可选）
+        price:
+          type: string
+          description: 价格（可选）
+          example: "12999.00"
+        remind_time:
+          type: integer
+          format: int64
+          description: 提醒时间（可选）
+        remind_content:
+          type: string
+          maxLength: 500
+          description: 提醒内容（可选）
+        top:
+          type: integer
+          description: 置顶权重（可选）
+          example: 100
+
+    DeleteItemReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 物品ID
+          example: 1

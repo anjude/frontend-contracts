@@ -152,9 +152,17 @@ function emitApi(domain, ns, entries) {
 }
 
 function main() {
-  // 当前只落地 user 一条链路，避免一次性铺开全部域。
-  // 后续要扩展时把 'user_api.yaml' 换成需要生成的 yaml 列表即可。
-  const files = ['user_api.yaml']
+  // superone 消费到的域。没有手写 types/<domain>.ts 的域会被 genOne 自动跳过
+  // （避免生成引用不存在命名空间的代码），所以列表可以大方写全。
+  const files = [
+    'user_api.yaml',
+    'common_api.yaml',
+    'checklist_api.yaml',
+    'topic_api.yaml',
+    'plan_api.yaml',
+    'item_api.yaml',
+    'message_subscribe_api.yaml',
+  ]
   const apiExports = []
   for (const f of files) {
     const domain = domainFromFile(f)

@@ -14,6 +14,53 @@ export type ExecutionStatus = (typeof ExecutionStatus)[keyof typeof ExecutionSta
 
 
 export namespace ChecklistApi {
+  export interface ChecklistItem {
+    id: number
+    contentMd: string
+  }
+
+  export interface ChecklistEntity {
+    id: number
+    openid: string
+    title: string
+    items: ChecklistItem[]
+    top: number
+    createTime: number
+    updateTime: number
+  }
+
+  export interface GetChecklistListReq {
+    offset: number
+    size: number
+    keyword: string
+  }
+  export interface GetChecklistListResp extends PaginationData<ChecklistEntity> {}
+
+  export interface GetChecklistDetailReq {
+    id: number
+  }
+  export interface GetChecklistDetailResp extends ChecklistEntity {}
+
+  export interface CreateChecklistReq {
+    title: string
+    items: ChecklistItem[]
+  }
+  export interface CreateChecklistResp extends ChecklistEntity {}
+
+  /** 部分更新：只传要改的字段（title / items / top 都可省） */
+  export interface UpdateChecklistReq {
+    id: number
+    title?: string
+    items?: ChecklistItem[]
+    top?: number
+  }
+  export interface UpdateChecklistResp extends ChecklistEntity {}
+
+  export interface DeleteChecklistReq {
+    id: number
+  }
+  export interface DeleteChecklistResp {}
+
   export interface ChecklistExecutionStepEntity {
     itemId: number
     summaryMd: string
@@ -75,9 +122,8 @@ export namespace ChecklistApi {
     id: number
   }
 
-  export interface DeleteExecutionResp {
-    success: boolean
-  }
+  /** 后端是空响应（执行记录软删，不返回内容） */
+  export interface DeleteExecutionResp {}
 
   export interface GetExecutionHistoryReq {
     checklistId: number

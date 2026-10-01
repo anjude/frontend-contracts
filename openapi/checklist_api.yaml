@@ -37,6 +37,187 @@ tags:
     description: 清单执行记录相关接口
 
 paths:
+  /checklist/list:
+    post:
+      tags:
+        - Checklist
+      summary: 获取清单列表
+      description: 分页获取清单列表，支持关键词搜索，按置顶权重降序
+      operationId: getChecklistList
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetChecklistListReq'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  offset: 0
+                  size: 20
+                  total: 1
+                  list:
+                    - id: 123
+                      title: "周末采购清单"
+                      top: 0
+                      items:
+                        - id: 1
+                          content_md: "牛奶"
+                      create_time: 1735660800
+                      update_time: 1735660800
+        '400':
+          description: 参数错误
+
+  /checklist/detail:
+    get:
+      tags:
+        - Checklist
+      summary: 获取清单详情
+      description: 根据清单ID获取清单详情
+      operationId: getChecklistDetail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: 清单ID
+          schema:
+            type: integer
+            format: int64
+            example: 123
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 123
+                  openid: "oXXXX"
+                  title: "周末采购清单"
+                  top: 0
+                  items:
+                    - id: 1
+                      content_md: "牛奶"
+                  create_time: 1735660800
+                  update_time: 1735660800
+        '400':
+          description: 参数错误
+
+  /checklist/create:
+    post:
+      tags:
+        - Checklist
+      summary: 创建清单
+      description: 创建一个新的清单（含清单项目）
+      operationId: createChecklist
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChecklistReq'
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 123
+                  title: "周末采购清单"
+                  items:
+                    - id: 1
+                      content_md: "牛奶"
+        '400':
+          description: 参数错误
+
+  /checklist/update:
+    post:
+      tags:
+        - Checklist
+      summary: 更新清单
+      description: 部分更新清单，只有传递的字段才会更新（标题 / 项目 / 置顶权重）
+      operationId: updateChecklist
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateChecklistReq'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data:
+                  id: 123
+                  title: "新标题"
+        '400':
+          description: 参数错误
+
+  /checklist/delete:
+    post:
+      tags:
+        - Checklist
+      summary: 删除清单
+      description: 根据清单ID删除清单
+      operationId: deleteChecklist
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteChecklistReq'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+              example:
+                err_code: 0
+                msg: "success"
+                detail: ""
+                data: {}
+        '400':
+          description: 参数错误
+
   /checklist/execution/list:
     post:
       tags:
@@ -313,6 +494,133 @@ components:
           example: ""
         data:
           description: 响应数据
+
+    ChecklistItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 项目ID
+          example: 1
+        content_md:
+          type: string
+          description: 项目内容（Markdown）
+          example: "牛奶"
+
+    ChecklistEntity:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 清单ID
+          example: 123
+        openid:
+          type: string
+          description: 所属用户 openid
+          example: "oXXXX"
+        title:
+          type: string
+          description: 清单标题
+          example: "周末采购清单"
+        items:
+          type: array
+          description: 清单项目列表
+          items:
+            $ref: '#/components/schemas/ChecklistItem'
+        top:
+          type: integer
+          description: 置顶权重，数字越大越靠前
+          example: 0
+        create_time:
+          type: integer
+          format: int64
+          description: 创建时间
+          example: 1735660800
+        update_time:
+          type: integer
+          format: int64
+          description: 更新时间
+          example: 1735660800
+
+    GetChecklistListReq:
+      type: object
+      properties:
+        offset:
+          type: integer
+          description: 偏移量
+          example: 0
+        size:
+          type: integer
+          description: 每页大小
+          example: 20
+        keyword:
+          type: string
+          description: 搜索关键词（可选）
+          example: ""
+
+    GetChecklistDetailReq:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 清单ID
+          example: 123
+
+    CreateChecklistReq:
+      type: object
+      required:
+        - title
+        - items
+      properties:
+        title:
+          type: string
+          maxLength: 128
+          description: 清单标题
+          example: "周末采购清单"
+        items:
+          type: array
+          description: 清单项目列表
+          items:
+            $ref: '#/components/schemas/ChecklistItem'
+
+    UpdateChecklistReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 清单ID
+          example: 123
+        title:
+          type: string
+          maxLength: 128
+          description: 清单标题（可选，不传则不更新）
+          example: "新标题"
+        items:
+          type: array
+          description: 清单项目列表（可选）
+          items:
+            $ref: '#/components/schemas/ChecklistItem'
+        top:
+          type: integer
+          description: 置顶权重（可选）
+          example: 100
+
+    DeleteChecklistReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 清单ID
+          example: 123
 
     GetExecutionListReq:
       type: object
