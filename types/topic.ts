@@ -43,6 +43,7 @@ export namespace TopicApi {
     openid: string
     topicType: TopicType
     topicId: number
+    parentLogId: number
     content: string
     preview: string
     extraData?: TopicLogExtraData
@@ -57,6 +58,7 @@ export namespace TopicApi {
     openid: string
     topicType: TopicType
     topicId: number
+    parentLogId: number
     content: string
     extraData?: TopicLogExtraData
     mark: TopicLogMark
@@ -109,6 +111,7 @@ export namespace TopicApi {
   export interface GetTopicLogListReq {
     topicIds: number[]
     topicTypes: TopicType[]
+    parentLogId?: number
     offset?: number
     size?: number
   }
@@ -129,6 +132,7 @@ export namespace TopicApi {
   export interface CreateTopicLogReq {
     topicType: TopicType
     topicId: number
+    parentLogId?: number
     content?: string
     extraData?: TopicLogExtraData
     mark?: TopicLogMark
@@ -139,6 +143,7 @@ export namespace TopicApi {
     openid: string
     topicType: TopicType
     topicId: number
+    parentLogId: number
     content: string
     extraData?: TopicLogExtraData
     mark: TopicLogMark

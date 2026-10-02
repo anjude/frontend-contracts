@@ -259,6 +259,8 @@ paths:
         分页获取主题记录列表，支持按多个主题ID和主题类型筛选。
 
         排序规则：按 `top DESC, create_time DESC` 排序，置顶的日志会排在前面。
+
+        层级：通过 `parent_log_id` 控制，不传或传 0 返回根记录（事件），传 X 返回 X 的子记录（跟进）。
       operationId: getTopicLogList
       security:
         - BearerAuth: []
@@ -284,17 +286,18 @@ paths:
                   size: 20
                   total: 100
                   list:
-                    - id: 1
-                      openid: "account_xxx"
-                      topic_type: 1
-                      topic_id: 123
-                      content: "日志内容"
-                      preview: "日志内容预览..."
-                      extra_data: null
-                      mark: 1
-                      top: 0
-                      create_time: 1704067200
-                      update_time: 1704067200
+                  - id: 1
+                    openid: "account_xxx"
+                    topic_type: 1
+                    topic_id: 123
+                    parent_log_id: 0
+                    content: "日志内容"
+                    preview: "日志内容预览..."
+                    extra_data: null
+                    mark: 1
+                    top: 0
+                    create_time: 1704067200
+                    update_time: 1704067200
         '400':
           description: 参数错误
 
@@ -331,6 +334,7 @@ paths:
                   openid: "account_xxx"
                   topic_type: 1
                   topic_id: 123
+                  parent_log_id: 0
                   content: "日志内容"
                   extra_data: null
                   mark: 1
@@ -373,6 +377,7 @@ paths:
                   openid: "account_xxx"
                   topic_type: 1
                   topic_id: 123
+                  parent_log_id: 0
                   content: "日志内容"
                   extra_data: null
                   mark: 1
@@ -430,6 +435,7 @@ paths:
                   openid: "account_xxx"
                   topic_type: 1
                   topic_id: 123
+                  parent_log_id: 0
                   content: "更新后的内容"
                   extra_data: null
                   mark: 1
@@ -601,6 +607,12 @@ components:
             - 10: 碳基空间约定 (CarbonAgreement)
             - 11: 碳基空间刻度 (CarbonScale)
           minItems: 1
+        parent_log_id:
+          type: integer
+          description: |
+            父记录ID。不传或传0时只返回根记录（事件），传具体ID时返回该记录的子记录（跟进）。
+            列表接口按此字段过滤并分页，根节点列表与子节点列表相互独立、各自分页。
+          default: 0
         offset:
           type: integer
           description: 偏移量，默认0
@@ -647,6 +659,10 @@ components:
           type: integer
           format: int64
           description: 主题ID
+        parent_log_id:
+          type: integer
+          format: int64
+          description: 父记录ID，0或不传表示根记录，传X表示X的跟进子记录
         content:
           type: string
           description: 日志内容；与 extra_data.image_urls 至少传一个
