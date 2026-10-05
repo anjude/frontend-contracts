@@ -1,14 +1,19 @@
 import type { PaginationData } from './base'
 
+/**
+ * 枚举取值以 backend-superone constant/checklist.go 的 iota+1 为准（1-based），
+ * DTO 注释里的 0-based 是过期描述。create 接口对 mode/status 有 binding:"required"，
+ * int 的 required 即非 0——传 0 会被参数校验直接拒绝。
+ */
 export const ExecutionMode = {
-  Normal: 0,
-  Recursive: 1,
+  Normal: 1,
+  StepByStep: 2,
 } as const
 export type ExecutionMode = (typeof ExecutionMode)[keyof typeof ExecutionMode]
 
 export const ExecutionStatus = {
-  Draft: 0,
-  Finished: 1,
+  InProgress: 1,
+  Completed: 2,
 } as const
 export type ExecutionStatus = (typeof ExecutionStatus)[keyof typeof ExecutionStatus]
 
@@ -112,8 +117,18 @@ export namespace ChecklistApi {
   export interface CreateExecutionReq extends ChecklistExecutionForm {}
   export interface CreateExecutionResp extends ChecklistExecutionRecordEntity {}
 
-  export interface UpdateExecutionReq extends ChecklistExecutionForm {
+  /** 部分更新：后端字段全是指针（nil 不更新），只传要改的字段即可。
+   * 对应 execution_dto.go 注释示例：{"id": 1, "status": 1} 也是合法请求 */
+  export interface UpdateExecutionReq {
     id: number
+    checklistId?: number
+    mode?: ExecutionMode
+    title?: string
+    overallSummaryMd?: string
+    stepSummaries?: ChecklistExecutionStepEntity[]
+    startTime?: number
+    finishTime?: number
+    status?: ExecutionStatus
   }
 
   export interface UpdateExecutionResp extends ChecklistExecutionRecordEntity {}

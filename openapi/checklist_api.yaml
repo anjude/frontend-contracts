@@ -640,8 +640,8 @@ components:
           example: 20
         status:
           type: integer
-          description: 执行状态（可选，0=进行中,1=已完成）
-          enum: [0, 1]
+          description: 执行状态（可选，1=进行中,2=已完成；0 会被 binding:required 拒绝勿传）
+          enum: [1, 2]
           example: 1
 
     GetExecutionListResp:
@@ -697,9 +697,9 @@ components:
           example: 123
         mode:
           type: integer
-          description: 执行模式（必填，0=执行,1=分步执行）
-          enum: [0, 1]
-          example: 0
+          description: 执行模式（必填，1=正常执行,2=分步执行；0 会被 binding:required 拒绝勿传）
+          enum: [1, 2]
+          example: 1
         title:
           type: string
           description: 标题（可选）
@@ -725,9 +725,9 @@ components:
           example: 1704070800
         status:
           type: integer
-          description: 执行状态（必填，0=进行中,1=已完成）
-          enum: [0, 1]
-          example: 0
+          description: 执行状态（必填，1=进行中,2=已完成；0 会被 binding:required 拒绝勿传）
+          enum: [1, 2]
+          example: 1
 
     CreateExecutionResp:
       type: object
@@ -751,9 +751,9 @@ components:
           example: 123
         mode:
           type: integer
-          description: 执行模式（可选，0=执行,1=分步执行）
-          enum: [0, 1]
-          example: 0
+          description: 执行模式（可选，1=正常执行,2=分步执行；0 会被 binding:required 拒绝勿传）
+          enum: [1, 2]
+          example: 1
         title:
           type: string
           description: 标题（可选）
@@ -779,8 +779,8 @@ components:
           example: 1704070800
         status:
           type: integer
-          description: 执行状态（可选，0=进行中,1=已完成）
-          enum: [0, 1]
+          description: 执行状态（可选，1=进行中,2=已完成；0 会被 binding:required 拒绝勿传）
+          enum: [1, 2]
           example: 1
 
     UpdateExecutionResp:
@@ -899,9 +899,9 @@ components:
           example: "执行记录标题"
         mode:
           type: integer
-          description: 执行模式（0=执行,1=分步执行）
-          enum: [0, 1]
-          example: 0
+          description: 执行模式（1=正常执行,2=分步执行；0 会被 binding:required 拒绝勿传）
+          enum: [1, 2]
+          example: 1
         overall_summary_md:
           type: string
           description: 整体总结（Markdown格式）
@@ -923,8 +923,8 @@ components:
           example: 1704070800
         status:
           type: integer
-          description: 执行状态（0=进行中,1=已完成）
-          enum: [0, 1]
+          description: 执行状态（1=进行中,2=已完成；0 会被 binding:required 拒绝勿传）
+          enum: [1, 2]
           example: 1
         create_time:
           type: integer
