@@ -34,6 +34,7 @@
 - OpenAPI：`openapi/*.yaml`
 - 共享 API：`src/apis/*`
 - 共享类型：`src/types/*`
+- 技术文档：`docs/technologies/{技术名}/`，每种技术独立目录；官方文档本地副本需保留来源链接和更新说明。
 
 ## 何时优先改这个仓
 

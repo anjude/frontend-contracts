@@ -9,6 +9,7 @@
 - `openapi/`：OpenAPI 契约源文件。
 - `src/apis/`：接口路径与调用契约。
 - `src/types/`：TS 类型、枚举与模型。
+- `docs/technologies/`：按技术目录归档的官方开发文档本地副本与索引，例如 `utools/developer-docs/`。
 
 ## 接口规范
 
