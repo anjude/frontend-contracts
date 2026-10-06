@@ -1,6 +1,5 @@
 export const TopicType = {
   Topic: 1,
-  Stock: 2,
   Item: 3,
   Feedback: 4,
   RecentTask: 5,
@@ -16,7 +15,8 @@ export type TopicType = (typeof TopicType)[keyof typeof TopicType]
 export const TopicLogMark = {
   Normal: 1,
 } as const
-export type TopicLogMark = (typeof TopicLogMark)[keyof typeof TopicLogMark]
+// 后端将 mark 作为位掩码整数使用，可为 0 或多个标记位的组合。
+export type TopicLogMark = number
 
 export namespace TopicApi {
   export interface TopicListItem {

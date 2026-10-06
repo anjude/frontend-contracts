@@ -8,7 +8,6 @@ info:
 
     ## 主题类型枚举 (TopicType)
     - 1: 原主题 (Topic)
-    - 2: 标的思考 (Stock)
     - 3: 物品日志 (Item)
     - 4: 用户反馈 (Feedback)
     - 5: 最近任务 (RecentTask)
@@ -596,7 +595,6 @@ components:
           description: |
             主题类型列表，至少1个。枚举值：
             - 1: 原主题 (Topic)
-            - 2: 标的思考 (Stock)
             - 3: 物品日志 (Item)
             - 4: 用户反馈 (Feedback)
             - 5: 最近任务 (RecentTask)
@@ -644,7 +642,6 @@ components:
           description: |
             主题类型，枚举值：
             - 1: 原主题 (Topic)
-            - 2: 标的思考 (Stock)
             - 3: 物品日志 (Item)
             - 4: 用户反馈 (Feedback)
             - 5: 最近任务 (RecentTask)
