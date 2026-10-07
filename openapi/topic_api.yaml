@@ -259,7 +259,7 @@ paths:
 
         排序规则：按 `top DESC, create_time DESC` 排序，置顶的日志会排在前面。
 
-        层级：通过 `parent_log_id` 控制，不传或传 0 返回根记录（事件），传 X 返回 X 的子记录（跟进）。
+        层级：通过 `parent_log_id` 控制，不传或传 0 返回根记录（事件），传 X 返回 X 的子记录（跟进）。根记录 level=0，最多创建两层跟进（最大 level=2）。
       operationId: getTopicLogList
       security:
         - BearerAuth: []
@@ -305,7 +305,7 @@ paths:
       tags:
         - TopicLog
       summary: 获取主题记录详情
-      description: 根据日志ID获取详细信息
+      description: 根据日志ID获取详细信息，返回实际 level（根记录为0，每层跟进加1）
       operationId: getTopicLogDetail
       security:
         - BearerAuth: []
@@ -334,6 +334,7 @@ paths:
                   topic_type: 1
                   topic_id: 123
                   parent_log_id: 0
+                  level: 0
                   content: "日志内容"
                   extra_data: null
                   mark: 1
@@ -659,7 +660,7 @@ components:
         parent_log_id:
           type: integer
           format: int64
-          description: 父记录ID，0或不传表示根记录，传X表示X的跟进子记录
+          description: 父记录ID，0或不传表示根记录；跟进必须与父记录属于同一主题，根记录 level=0，最多创建两层跟进（最大 level=2）。level=2 的记录不能继续创建跟进
         content:
           type: string
           description: 日志内容；与 extra_data.image_urls 至少传一个

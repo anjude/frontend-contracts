@@ -55,6 +55,8 @@ export namespace TopicApi {
 
   export interface TopicLogDetailView {
     id: number
+    /** 实际层级，从根记录 0 开始，每层跟进递增 1 */
+    level: number
     openid: string
     topicType: TopicType
     topicId: number
@@ -160,7 +162,7 @@ export namespace TopicApi {
     top?: number
   }
 
-  export interface UpdateTopicLogResp extends TopicLogDetailView {}
+  export interface UpdateTopicLogResp extends Omit<TopicLogDetailView, 'level'> {}
 
   export interface DeleteTopicLogReq {
     id: number
