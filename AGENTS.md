@@ -18,7 +18,8 @@
 这个子仓能直接处理：
 
 - 维护 `openapi/*.yaml` 契约源文件
-- 维护 `src/apis`、`src/types` 这类共享契约代码
+- 维护 `apis/`、`types/` 这类共享契约代码
+- 维护 `templates/uni-app/` 中可复用的客户端请求接入模板与接入指南
 - 统一前端对字段名、结构、枚举的消费方式
 
 这个子仓不能单独完成：
@@ -32,8 +33,9 @@
 ## 代码入口
 
 - OpenAPI：`openapi/*.yaml`
-- 共享 API：`src/apis/*`
-- 共享类型：`src/types/*`
+- 共享 API：`apis/*`
+- 共享类型：`types/*`
+- uni-app request 模板：`templates/uni-app/`
 - 技术文档：`docs/technologies/{技术名}/`，每种技术独立目录；官方文档本地副本需保留来源链接和更新说明。
 
 ## 何时优先改这个仓
@@ -58,7 +60,7 @@
 
 1. `business-repo/backend-superone` 修改接口实现
 2. 当前仓同步 `openapi/*.yaml`
-3. 当前仓同步 `src/apis` / `src/types`
+3. 当前仓同步 `apis/` / `types/`
 4. 受影响前端项目再落具体页面改动
 
 ## 常见注意点
@@ -66,3 +68,4 @@
 - 不要把当前仓当成后端实现来源；来源永远是 `business-repo/backend-superone` 实现与当前仓契约文件。
 - 不要只改共享类型却不核对业务前端是否真的已消费新字段。
 - 如果只是单个前端页面的本地展示逻辑变化，通常不需要动这个仓。
+- request 模板用于跨项目复制；产品自己的 API 汇总入口、base URL、登录、token、业务错误表现与平台授权不能默认沉淀为所有客户端共用行为。模板不得覆盖客户端已有的 `src/apis/index.ts`，接入时由项目选择需要的契约 API 并组合导出。

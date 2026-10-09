@@ -10,5 +10,6 @@
     "forceConsistentCasingInFileNames": true,
     "lib": ["ES2020", "DOM"]
   },
-  "include": ["**/*.ts"]
+  "include": ["apis/**/*.ts", "types/**/*.ts", "request/**/*.ts", "index.ts"],
+  "exclude": ["templates/**", "node_modules"]
 }
