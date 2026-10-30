@@ -23,6 +23,7 @@ export const CommonApiPaths = {
   getHotData: '/api/so/common/hot_data/get',
   getFeRedis: '/api/so/common/fe_redis/get',
   setFeRedis: '/api/so/common/fe_redis/set',
+  compareSetFeRedis: '/api/so/common/fe_redis/compare_set',
   delFeRedis: '/api/so/common/fe_redis/del',
   getUserBehaviorStats: '/api/so/common/user_behavior_stats',
 } as const
@@ -70,6 +71,8 @@ export const createCommonApi = (http: HttpClient) => ({
     http.get<CommonApi.GetFeRedisResp>(CommonApiPaths.getFeRedis, params, opts),
   setFeRedis: (data: CommonApi.SetFeRedisReq, opts?: RequestOptions) =>
     http.post<unknown>(CommonApiPaths.setFeRedis, data, opts),
+  compareSetFeRedis: (data: CommonApi.CompareSetFeRedisReq, opts?: RequestOptions) =>
+    http.post<CommonApi.CompareSetFeRedisResp>(CommonApiPaths.compareSetFeRedis, data, opts),
   delFeRedis: (data: CommonApi.DelFeRedisReq, opts?: RequestOptions) =>
     http.post<unknown>(CommonApiPaths.delFeRedis, data, opts),
   getUserBehaviorStats: (params: CommonApi.GetUserBehaviorStatsReq, opts?: RequestOptions) =>

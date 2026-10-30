@@ -740,6 +740,35 @@ paths:
         '400':
           description: 参数错误
 
+  /common/fe_redis/compare_set:
+    post:
+      tags: [FeRedis]
+      summary: 原子比较并更新前端 Redis 缓存
+      description: 仅使用前端命名空间。expected_value 为 null 或省略时仅在 key 不存在时创建，默认过期时间为一年；字符串表示仅在已存在且值相等时更新并保留原 TTL。返回 updated 表示是否写入。
+      operationId: compareSetFeRedis
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompareSetFeRedisReq'
+      responses:
+        '200':
+          description: 比较结果
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CompareSetFeRedisResp'
+        '400':
+          description: 参数错误
+
   /common/fe_redis/del:
     post:
       tags:
@@ -1199,6 +1228,25 @@ components:
           type: string
           description: Redis 值（必填）
           example: "cache_value"
+
+    CompareSetFeRedisReq:
+      type: object
+      required: [redis_key, redis_value]
+      properties:
+        redis_key:
+          type: string
+        expected_value:
+          type: string
+          nullable: true
+        redis_value:
+          type: string
+
+    CompareSetFeRedisResp:
+      type: object
+      required: [updated]
+      properties:
+        updated:
+          type: boolean
 
     DelFeRedisReq:
       type: object
