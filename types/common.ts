@@ -201,6 +201,17 @@ export namespace CommonApi {
     redisKey: string
   }
 
+  export interface CompareSetFeRedisReq {
+    redisKey: string
+    /** null 或不传表示期望 key 不存在；空字符串表示期望已存在且值为空。 */
+    expectedValue?: string | null
+    redisValue: string
+  }
+
+  export interface CompareSetFeRedisResp {
+    updated: boolean
+  }
+
   export interface GetUserBehaviorStatsReq {
     lastNDays?: number
   }
