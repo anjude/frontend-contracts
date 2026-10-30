@@ -10,3 +10,5 @@ export * from './topic'
 export * from './trip'
 export * from './user'
 export * from './wechat'
+
+export * from './realtime-room'
