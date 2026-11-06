@@ -66,6 +66,13 @@ paths:
             type: string
           description: 唯一标识符（必填）
           example: "device_123456"
+        - name: secret
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{64}$'
+          description: 客户端生成的 32 字节随机密钥，编码为十六进制。
       responses:
         '200':
           description: 获取成功
@@ -136,6 +143,13 @@ paths:
             type: string
           description: Code（必填，从getCode接口获取）
           example: "123456789012"
+        - name: secret
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{64}$'
+          description: 与取码时传入的密钥相同。匹配且扫码确认后仅可领取一次。
       responses:
         '200':
           description: 查询成功
@@ -1040,11 +1054,15 @@ components:
       type: object
       required:
         - unique_id
+        - secret
       properties:
         unique_id:
           type: string
           description: 唯一标识符（必填，用于标识设备或会话）
           example: "device_123456"
+        secret:
+          type: string
+          pattern: '^[0-9a-fA-F]{64}$'
 
     GetCodeResp:
       type: object
@@ -1072,11 +1090,15 @@ components:
       type: object
       required:
         - code
+        - secret
       properties:
         code:
           type: string
           description: Code（必填，从getCode接口获取）
           example: "123456789012"
+        secret:
+          type: string
+          pattern: '^[0-9a-fA-F]{64}$'
 
     GetJwtResp:
       type: object

@@ -46,6 +46,7 @@ export namespace UserApi {
 
   export interface GetCodeReq {
     uniqueId: string
+    secret: string
   }
 
   export interface GetCodeResp {
@@ -61,6 +62,7 @@ export namespace UserApi {
 
   export interface GetJwtReq {
     code: string
+    secret: string
   }
 
   export interface GetJwtResp {
