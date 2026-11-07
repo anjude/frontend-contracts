@@ -1,0 +1,132 @@
+openapi: 3.0.3
+info:
+  title: 鹅懂个啥测试配置 API
+  version: 1.0.0
+servers:
+  - url: /api/so
+paths:
+  /gknow/assessment/list:
+    post:
+      operationId: getAssessmentList
+      summary: 获取测试目录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GetAssessmentListReq' }
+      responses:
+        '200':
+          description: 测试目录
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GetAssessmentListResp' }
+  /gknow/assessment/detail:
+    get:
+      operationId: getAssessmentDetail
+      summary: 获取测试配置（未发布仅管理员可读）
+      parameters:
+        - in: query
+          name: test_key
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: 测试配置
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GetAssessmentDetailResp' }
+  /gknow/assessment/create:
+    post:
+      operationId: createAssessment
+      summary: 管理员创建测试配置，初始状态未发布
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAssessmentReq' }
+      responses:
+        '200': { description: 已创建 }
+  /gknow/assessment/update:
+    post:
+      operationId: updateAssessment
+      summary: 管理员更新测试配置或发布状态
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateAssessmentReq' }
+      responses:
+        '200': { description: 已更新 }
+components:
+  schemas:
+    AssessmentType:
+      type: string
+      enum: [personality, finance]
+      description: 测试类型；数据库存文本，代码按枚举校验
+    AssessmentStatus:
+      type: integer
+      enum: [0, 1]
+      description: 0未发布，1已发布
+    GetAssessmentListReq:
+      type: object
+      properties:
+        assessment_type: { type: string }
+        offset: { type: integer, minimum: 0 }
+        size: { type: integer, minimum: 0, maximum: 100 }
+    AssessmentSummary:
+      type: object
+      required: [test_key, assessment_type, title, test_status, content_version]
+      properties:
+        test_key: { type: string }
+        assessment_type: { $ref: '#/components/schemas/AssessmentType' }
+        title: { type: string }
+        summary: { type: string }
+        cover_url: { type: string }
+        logo_url: { type: string, description: 测试配置中的卡片标识 HTTPS 地址 }
+        display_order: { type: integer }
+        test_status: { $ref: '#/components/schemas/AssessmentStatus' }
+        content_version: { type: integer }
+    GetAssessmentListResp:
+      type: object
+      properties:
+        offset: { type: integer }
+        size: { type: integer }
+        total: { type: integer }
+        types: { type: array, items: { $ref: '#/components/schemas/AssessmentType' } }
+        list: { type: array, items: { $ref: '#/components/schemas/AssessmentSummary' } }
+    GetAssessmentDetailResp:
+      type: object
+      properties:
+        assessment:
+          allOf:
+            - $ref: '#/components/schemas/AssessmentSummary'
+            - type: object
+              properties:
+                content:
+                  type: object
+                  description: 配置中的 logo_url、result_note、share_image_url 及各结果 image_url 均可选；图片使用 HTTPS 地址。
+                  additionalProperties: true
+    CreateAssessmentReq:
+      type: object
+      required: [test_key, assessment_type, title, content]
+      properties:
+        test_key: { type: string }
+        assessment_type: { $ref: '#/components/schemas/AssessmentType' }
+        title: { type: string, maxLength: 128 }
+        summary: { type: string, maxLength: 512 }
+        cover_url: { type: string, format: uri }
+        display_order: { type: integer }
+        content: { type: object, additionalProperties: true }
+    UpdateAssessmentReq:
+      type: object
+      required: [test_key, content_version]
+      properties:
+        test_key: { type: string }
+        content_version: { type: integer, minimum: 1 }
+        assessment_type: { $ref: '#/components/schemas/AssessmentType' }
+        title: { type: string }
+        summary: { type: string }
+        cover_url: { type: string }
+        display_order: { type: integer }
+        test_status: { $ref: '#/components/schemas/AssessmentStatus' }
+        content: { type: object, additionalProperties: true }

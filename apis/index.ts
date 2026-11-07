@@ -8,3 +8,4 @@ export { MessageSubscribeApiPaths, createMessageSubscribeApi } from './message-s
 export { WechatApiPaths, createWechatApi } from './wechat'
 export { SkillApiPaths, createSkillApi } from './skill'
 export { OrganizationApiPaths, createOrganizationApi } from './organization'
+export { AssessmentApiPaths, createAssessmentApi } from './assessment'
