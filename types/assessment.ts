@@ -37,12 +37,15 @@ export interface ConfiguredAssessment {
   resultNote?: string
   shareImageUrl?: string
   navigation: { allowPrevious: boolean; allowSkip: boolean }
+  /** 题目按配置顺序单线执行；策略只决定结果计算方式。 */
+  scoring?: { strategy: 'weighted' | 'choice-share' | 'profile-adjusted' }
   dimensions: string[]
   questions: Array<{
     id: string
+    context?: string
     blocks: Array<{ type: 'text'; text: string; title?: string } | { type: 'image'; src: string; caption: string } | { type: 'chat'; title: string; messages: Array<{ id: string; name: string; text: string; side: 'left' | 'right' | 'system' }> } | { type: 'market'; title: string; text: string; name: string; change: string; down?: boolean; chart?: string }>
     prompt: string
-    options: Array<{ id: string; text: string; scores: Record<string, number>; evidence: string }>
+    options: Array<{ id: string; text: string; scores: Record<string, number>; evidence: string; weight?: number }>
   }>
-  results: Array<{ id: string; title: string; weights: Record<string, number>; description: string; considerations?: string; share?: string; imageUrl?: string }>
+  results: Array<{ id: string; title: string; headline?: string; weights: Record<string, number>; description: string; considerations?: string; strengths?: string; suggestion?: string; badge?: string; share?: string; imageUrl?: string }>
 }
