@@ -47,6 +47,8 @@ export namespace UserApi {
   export interface GetCodeReq {
     uniqueId: string
     secret: string
+    envVersion?: 'release' | 'trial' | 'develop'
+    scene?: 'mcp'
   }
 
   export interface GetCodeResp {

@@ -1,0 +1,196 @@
+openapi: 3.0.3
+info:
+  title: Skill API - 私有 Skill 接口
+  version: 1.0.0
+  description: |
+    普通小程序 JWT 和 MCP JWT 均可调用。服务端从 JWT 取得当前账号，按账号隔离数据。
+    所有业务结果均使用 HTTP 200 和统一响应信封。err_code 为 0 表示成功。
+    - -100001 参数或文件包无效
+    - -100002 数据库操作失败
+    - -100004 JWT 缺失或无效
+    - -100006 存储的文件包无法解码
+    - -100008 访客无权访问
+    - -100010 当前账号下不存在指定 Skill
+    - -100011 同名 Skill 已存在或更新版本冲突，具体原因见 msg
+
+servers:
+  - url: /api/so/mcp
+security:
+  - BearerAuth: []
+
+paths:
+  /skill/list:
+    post:
+      summary: 分页列出当前账号的 Skill
+      operationId: getSkillList
+      description: 按名称升序返回元数据。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetSkillListReq'
+      responses:
+        '200':
+          description: 分页结果
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        oneOf:
+                          - $ref: '#/components/schemas/GetSkillListResp'
+                          - $ref: '#/components/schemas/EmptyData'
+  /skill/detail:
+    get:
+      summary: 读取 Skill 文件包
+      operationId: getSkillDetail
+      parameters:
+        - name: skill_name
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/SkillName'
+      responses:
+        '200':
+          description: Skill 详情
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/StandardResponse'
+                  - type: object
+                    properties:
+                      data:
+                        oneOf:
+                          - $ref: '#/components/schemas/GetSkillDetailResp'
+                          - $ref: '#/components/schemas/EmptyData'
+  /skill/create:
+    post:
+      summary: 创建 Skill
+      operationId: createSkill
+      description: 初始版本为 1。账号内名称重复时返回冲突。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSkillReq'
+      responses:
+        '200':
+          $ref: '#/components/responses/SkillWriteResponse'
+  /skill/update:
+    post:
+      summary: 按当前版本更新 Skill
+      operationId: updateSkill
+      description: 更新成功后版本加 1。提交的版本过期时重新读取后再决定是否更新。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSkillReq'
+      responses:
+        '200':
+          $ref: '#/components/responses/SkillWriteResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    SkillWriteResponse:
+      description: 保存结果
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/StandardResponse'
+              - type: object
+                properties:
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/SkillInfo'
+                      - $ref: '#/components/schemas/EmptyData'
+  schemas:
+    StandardResponse:
+      type: object
+      required: [err_code, msg, detail, data]
+      properties:
+        err_code: { type: integer, format: int32 }
+        msg: { type: string }
+        detail: { type: string }
+        data: { type: object, nullable: true }
+    EmptyData:
+      type: object
+      nullable: true
+      enum: [null]
+    SkillName:
+      type: string
+      pattern: '^[a-z0-9][a-z0-9-]{0,63}$'
+    SkillFiles:
+      type: object
+      maxProperties: 64
+      required: [SKILL.md]
+      description: 文件相对路径到标准 Base64 的映射。文件名和路径大小写须原样传输。SKILL.md 必须非空，解码后合计不超过 256 KiB，写入请求体上限为 512 KiB。
+      additionalProperties:
+        type: string
+        format: byte
+    SkillInfo:
+      type: object
+      required: [skill_name, digest, revision]
+      properties:
+        skill_name:
+          $ref: '#/components/schemas/SkillName'
+        digest:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          description: 将文件映射按键排序并紧凑编码为 Go JSON 后的 SHA-256 十六进制摘要。
+        revision: { type: integer, format: int64, minimum: 1 }
+    GetSkillListReq:
+      type: object
+      properties:
+        offset: { type: integer, minimum: 0, default: 0 }
+        size:
+          type: integer
+          default: 20
+          description: 小于等于 0 使用默认值，大于 100 按 100 处理。
+    GetSkillListResp:
+      type: object
+      required: [offset, size, total, list]
+      properties:
+        offset: { type: integer }
+        size: { type: integer }
+        total: { type: integer, format: int64 }
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/SkillInfo'
+    GetSkillDetailResp:
+      allOf:
+        - $ref: '#/components/schemas/SkillInfo'
+        - type: object
+          required: [files]
+          properties:
+            files:
+              $ref: '#/components/schemas/SkillFiles'
+    CreateSkillReq:
+      type: object
+      required: [skill_name, files]
+      properties:
+        skill_name:
+          $ref: '#/components/schemas/SkillName'
+        files:
+          $ref: '#/components/schemas/SkillFiles'
+    UpdateSkillReq:
+      allOf:
+        - $ref: '#/components/schemas/CreateSkillReq'
+        - type: object
+          required: [revision]
+          properties:
+            revision: { type: integer, format: int64, minimum: 1 }

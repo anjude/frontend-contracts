@@ -73,6 +73,21 @@ paths:
             type: string
             pattern: '^[0-9a-fA-F]{64}$'
           description: 客户端生成的 32 字节随机密钥，编码为十六进制。
+        - name: env_version
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [release, trial, develop]
+            default: release
+          description: 扫码打开的小程序版本，分别为正式版、体验版、开发版。
+        - name: scene
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [mcp]
+          description: 传 mcp 时，扫码签发的 JWT 仅能访问 /api/so/mcp/ 下的路由。省略时按普通登录签发。
       responses:
         '200':
           description: 获取成功
@@ -133,6 +148,7 @@ paths:
         通过Code获取JWT Token，用于微信二维码登录流程。
         前端轮询此接口，当用户扫码并确认登录后，返回JWT Token。
         如果返回的jwt_token为空，表示用户尚未扫码或扫码后未确认。
+        取码时指定 scene=mcp 的会话签发带 Scene 声明的 JWT。新签发的 JWT 默认有效期为一年。
       operationId: getJwt
       security: []
       parameters:
@@ -1063,6 +1079,14 @@ components:
         secret:
           type: string
           pattern: '^[0-9a-fA-F]{64}$'
+        env_version:
+          type: string
+          enum: [release, trial, develop]
+          default: release
+        scene:
+          type: string
+          enum: [mcp]
+          description: 可选登录场景。传 mcp 时，签发的 JWT 仅可访问 MCP 路由。
 
     GetCodeResp:
       type: object
