@@ -1,0 +1,315 @@
+openapi: 3.0.3
+info:
+  title: 组织 API
+  version: 1.0.0
+  description: 所有接口要求登录，返回统一业务响应信封。
+servers:
+  - url: /api/so/mcp
+security:
+  - BearerAuth: []
+paths:
+  /organization/create:
+    post:
+      summary: 创建组织
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReq'
+      responses:
+        '200':
+          description: 统一业务响应信封
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - err_code
+                  - msg
+                  - detail
+                  - data
+                properties:
+                  err_code:
+                    type: integer
+                  msg:
+                    type: string
+                  detail:
+                    type: string
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/CreateResp'
+                      - type: object
+                        nullable: true
+      operationId: create
+  /organization/list:
+    post:
+      summary: 列出本人所属组织
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListReq'
+      responses:
+        '200':
+          description: 统一业务响应信封
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - err_code
+                  - msg
+                  - detail
+                  - data
+                properties:
+                  err_code:
+                    type: integer
+                  msg:
+                    type: string
+                  detail:
+                    type: string
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/OrganizationListResp'
+                      - type: object
+                        nullable: true
+      operationId: list
+  /organization/member/list:
+    post:
+      summary: 成员查看组织成员
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembersReq'
+      responses:
+        '200':
+          description: 统一业务响应信封
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - err_code
+                  - msg
+                  - detail
+                  - data
+                properties:
+                  err_code:
+                    type: integer
+                  msg:
+                    type: string
+                  detail:
+                    type: string
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/MemberListResp'
+                      - type: object
+                        nullable: true
+      operationId: members
+  /organization/invite/create:
+    post:
+      summary: 组织者创建七天有效的一次性邀请
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteReq'
+      responses:
+        '200':
+          description: 统一业务响应信封
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - err_code
+                  - msg
+                  - detail
+                  - data
+                properties:
+                  err_code:
+                    type: integer
+                  msg:
+                    type: string
+                  detail:
+                    type: string
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/InviteResp'
+                      - type: object
+                        nullable: true
+      operationId: invite
+  /organization/invite/accept:
+    post:
+      summary: 领取邀请并加入组织
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptReq'
+      responses:
+        '200':
+          description: 统一业务响应信封
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - err_code
+                  - msg
+                  - detail
+                  - data
+                properties:
+                  err_code:
+                    type: integer
+                  msg:
+                    type: string
+                  detail:
+                    type: string
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/AcceptResp'
+                      - type: object
+                        nullable: true
+      operationId: accept
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    OrganizationID:
+      type: object
+      required:
+        - organization_id
+      properties:
+        organization_id:
+          type: integer
+          format: int64
+          minimum: 1
+    Page:
+      type: object
+      properties:
+        offset:
+          type: integer
+          minimum: 0
+          default: 0
+        size:
+          type: integer
+          minimum: 0
+          maximum: 100
+          default: 20
+    OrganizationInfo:
+      type: object
+      properties:
+        organization_id:
+          type: integer
+          format: int64
+        organization_name:
+          type: string
+        member_role:
+          type: integer
+          enum:
+            - 1
+            - 2
+          description: 1 组织者；2 成员
+    MemberInfo:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          format: int64
+        nick_name:
+          type: string
+        member_role:
+          type: integer
+          enum:
+            - 1
+            - 2
+          description: 1 组织者；2 成员
+    CreateResp:
+      type: object
+      properties:
+        organization_id:
+          type: integer
+          format: int64
+        organization_name:
+          type: string
+    InviteResp:
+      type: object
+      properties:
+        invite_token:
+          type: string
+        expire_time:
+          type: integer
+          format: int64
+          description: Unix 秒
+    AcceptResp:
+      type: object
+      properties:
+        organization_id:
+          type: integer
+          format: int64
+        member_role:
+          type: integer
+          enum:
+            - 1
+            - 2
+          description: 1 组织者；2 成员
+    OrganizationListResp:
+      type: object
+      properties:
+        offset:
+          type: integer
+        size:
+          type: integer
+        total:
+          type: integer
+          format: int64
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationInfo'
+    MemberListResp:
+      type: object
+      properties:
+        offset:
+          type: integer
+        size:
+          type: integer
+        total:
+          type: integer
+          format: int64
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberInfo'
+    CreateReq:
+      type: object
+      required:
+        - organization_name
+      properties:
+        organization_name:
+          type: string
+          maxLength: 128
+    ListReq:
+      $ref: '#/components/schemas/Page'
+    MembersReq:
+      allOf:
+        - $ref: '#/components/schemas/OrganizationID'
+        - $ref: '#/components/schemas/Page'
+    InviteReq:
+      $ref: '#/components/schemas/OrganizationID'
+    AcceptReq:
+      type: object
+      required:
+        - invite_token
+      properties:
+        invite_token:
+          type: string

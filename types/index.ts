@@ -12,3 +12,5 @@ export * from './user'
 export * from './wechat'
 
 export * from './realtime-room'
+export * from './skill'
+export * from './organization'

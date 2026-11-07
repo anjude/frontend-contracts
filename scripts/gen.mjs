@@ -163,6 +163,8 @@ function main() {
     'item_api.yaml',
     'message_subscribe_api.yaml',
     'wechat_api.yaml',
+    'skill_api.yaml',
+    'organization_api.yaml',
   ]
   const apiExports = []
   for (const f of files) {
