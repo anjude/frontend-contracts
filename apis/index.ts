@@ -10,3 +10,5 @@ export { SkillApiPaths, createSkillApi } from './skill'
 export { OrganizationApiPaths, createOrganizationApi } from './organization'
 export { AssessmentApiPaths, createAssessmentApi } from './assessment'
 export { AnalyticsApiPaths, createAnalyticsApi } from './analytics'
+
+export { StoryApiPaths, createStoryApi } from './story'

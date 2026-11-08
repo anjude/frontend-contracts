@@ -16,3 +16,5 @@ export * from './skill'
 export * from './organization'
 export * from './assessment'
 export * from './analytics'
+
+export * from './story'

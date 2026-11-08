@@ -1,0 +1,124 @@
+openapi: 3.0.3
+info:
+  title: 鹅懂个啥副本配置 API
+  version: 1.0.0
+security:
+  - bearerAuth: []
+paths:
+  /api/so/gknow/story/list:
+    post:
+      summary: 按类型读取副本摘要列表
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [story_type]
+              properties:
+                story_type: { $ref: '#/components/schemas/StoryType' }
+                offset: { type: integer, default: 0 }
+                size: { type: integer, default: 20, maximum: 100 }
+                include_unpublished: { type: boolean, default: false, description: 仅管理员可请求 }
+      responses:
+        '200':
+          description: 业务信封中的 data 为摘要列表，不包含 content_json
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          total: { type: integer }
+                          list: { type: array, items: { $ref: '#/components/schemas/Summary' } }
+  /api/so/gknow/story/detail:
+    get:
+      summary: 按标识读取副本详情，普通用户只能读取已发布内容
+      parameters:
+        - { name: story_key, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: 业务信封中的 data 包含原文字符串
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          story_key: { type: string }
+                          status: { $ref: '#/components/schemas/StoryStatus' }
+                          content_version: { type: integer }
+                          content_json: { type: string, description: 前端定义的 JSON 原文 }
+  /api/so/gknow/story/create:
+    post:
+      summary: 管理员创建草稿
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/EditableFields'
+                - type: object
+                  required: [story_key, story_type, title, content_json]
+                  properties:
+                    story_key: { type: string, maxLength: 64 }
+      responses:
+        '200': { description: 返回标识及版本，业务失败返回现有错误码 }
+  /api/so/gknow/story/update:
+    post:
+      summary: 管理员按预期版本更新内容或发布状态
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/EditableFields'
+                - type: object
+                  required: [story_key, expected_version]
+                  properties:
+                    story_key: { type: string, maxLength: 64 }
+                    expected_version: { type: integer, minimum: 1 }
+                    status: { $ref: '#/components/schemas/StoryStatus' }
+      responses:
+        '200': { description: 返回标识及新版本；版本冲突返回 IllegalOperation }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    StoryType: { type: string, enum: [life, love, finance] }
+    StoryStatus: { type: integer, enum: [0, 1], description: 0 未发布，1 已发布 }
+    Envelope:
+      type: object
+      properties:
+        err_code: { type: integer }
+        err_msg: { type: string }
+    EditableFields:
+      type: object
+      properties:
+        story_type: { $ref: '#/components/schemas/StoryType' }
+        title: { type: string, maxLength: 128 }
+        summary: { type: string, maxLength: 512 }
+        cover_url: { type: string, maxLength: 1024 }
+        display_order: { type: integer }
+        content_json: { type: string, description: 前端定义的 JSON 原文，后端不解析 }
+    Summary:
+      type: object
+      properties:
+        story_key: { type: string }
+        story_type: { $ref: '#/components/schemas/StoryType' }
+        title: { type: string }
+        summary: { type: string }
+        cover_url: { type: string }
+        display_order: { type: integer }
+        status: { $ref: '#/components/schemas/StoryStatus' }
+        content_version: { type: integer }
