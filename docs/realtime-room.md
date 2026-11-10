@@ -4,7 +4,7 @@
 
 `GET /api/so/realtime-room/ws` 以 WebSocket 升级，客户端使用 `Authorization: Bearer <JWT>` 请求头。房间归属于登录态的 appId，成员身份取登录态的 openid，不接受客户端指定身份。微信客户端使用对应环境的 `wss://` 地址。房间 ID 为服务端生成的随机标识，邀请链接应避免公开传播。
 
-每条消息为 JSON 文本，字段使用 camelCase。服务端连接帧最大 40000 字节，共享数据、私有数据和事件数据各不超过 32768 字节。房间人数 2～8，TTL 60～7200 秒，TTL 固定从创建开始。服务端约每 25 秒发 WebSocket ping，客户端应正常响应 pong；网络断开后必须重新连接、`join` 并取快照。平台需允许 Socket 合法域名和端口。
+每条消息为 JSON 文本，字段使用 camelCase。服务端请求帧最大 200 KiB，共享数据及房主数据各不超过 96 KiB，私有数据及事件数据各不超过 32 KiB。房间人数 2～100，TTL 60～7200 秒，TTL 固定从创建开始。服务端约每 25 秒发 WebSocket ping，客户端应正常响应 pong；网络断开后必须重新连接、`join` 并取快照。平台需允许 Socket 合法域名和端口。
 
 ## 请求和响应
 
@@ -12,18 +12,19 @@
 
 | 动作 | 参数 | 行为 |
 | --- | --- | --- |
-| `create` | `maxMembers`、`ttlSeconds`、`data` | 创建并加入房间，返回快照和随机 `roomId` |
+| `create` | `maxMembers`、`ttlSeconds`、`data`，可选 `anonymousMembers`、`ownerData` | 创建并加入房间，返回快照和随机 `roomId` |
 | `join` | `roomId` | 加入或以相同身份恢复；已有成员恢复不会占用新名额 |
 | `snapshot` | `roomId` | 读取共享数据、成员和自己的私有数据 |
 | `compare_set` | `roomId`、`expectedVersion`、`data` | 对整个共享数据做原子版本比较与替换 |
+| `owner_set` | `roomId`、`expectedVersion`、`data` | 仅允许房主按版本替换房主共享数据 |
 | `private_set` | `roomId`、`expectedVersion`、`data` | 对自己的私有数据做原子版本比较与替换 |
 | `event` | `roomId`、`eventType`、`data` | 给当前成员广播临时事件，不持久化 |
 | `leave` | `roomId` | 主动离开并删除自己的私有数据；连接关闭 |
 | `ping` | 无 | 应用层心跳响应 |
 
-对 `compare_set` 或 `private_set` 返回 `conflict` 时，读取 `snapshot`，在最新版本基础上合并并重试。操作是否允许、字段约束及重试幂等由具体业务负责。`eventType` 为 1～64 字符，事件内容对房间成员可见，不能存放私密数据。
+对 `compare_set`、`owner_set` 或 `private_set` 返回 `conflict` 时，读取 `snapshot`，在最新版本基础上合并并重试。操作是否允许、字段约束及重试幂等由具体业务负责。`eventType` 为 1～64 字符，事件内容对房间成员可见，不能存放私密数据。
 
-`snapshot` 包含 `roomId`、`version`、`members`（成员 openid 数组）、`maxMembers`、`expiresAt`（毫秒时间戳）、`data`，以及可选的 `privateData`；仅返回请求者本人的私有数据。共享或私有数据的任何更新都会增加共同版本。成员加入、离开也会增加版本。
+`snapshot` 包含 `roomId`、`version`、`members`（成员 openid 数组）、`maxMembers`、`expiresAt`（毫秒时间戳）、`data`，以及可选的 `privateData`；仅返回请求者本人的私有数据。新建房间还返回 `ownerId`、`selfId`，以及设有初始值或经房主更新的 `ownerData`。设置 `anonymousMembers` 的房间以房间内标识代替成员、房主和事件发送者的 OpenID。共享、房主或私有数据的更新都会增加共同版本。成员加入、离开也会增加版本。
 
 房间发生变化时服务端广播 `{ "type": "changed", "roomId": "...", "version": 2 }`，客户端收到后读取 `snapshot`。事件广播为 `{ "type": "event", "roomId": "...", "sender": "...", "eventType": "...", "data": ... }`。推送是即时通知，不是持久队列；客户端断线和重连后必须读取快照，长时间连接也应定期同步，以弥补通知丢失。
 

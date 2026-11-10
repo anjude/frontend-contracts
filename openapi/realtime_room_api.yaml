@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: |
     升级后使用 JSON 文本消息；字段为 camelCase。完整消息语义、限制及恢复要求见 docs/realtime-room.md。
-    私有数据仅向所属成员返回。推送不是持久队列，断线后需要重新 join 并读取快照。
+    私有数据仅向所属成员返回，房主共享数据仅由房主写入。推送不是持久队列，断线后需要重新 join 并读取快照。
 servers:
   - url: https://api.beanflow.top
 paths:

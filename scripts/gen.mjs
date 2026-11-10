@@ -24,6 +24,12 @@ const APIS_DIR = path.join(ROOT, 'apis')
 
 // operationId -> 非约定命名的响应类型（yaml 信封层无法表达，手写覆盖）
 const OVERRIDES = {
+  'gknow-wheel.create': 'WriteResp',
+  'gknow-wheel.update': 'WriteResp',
+  'gknow-wheel.delete': 'WriteResp',
+  'gknow-wheel.upsertOption': 'WriteResp',
+  'gknow-wheel.deleteOption': 'WriteResp',
+  'gknow-wheel.batchOptions': 'WriteResp',
   'user.getUser': 'UserInfoView',
   'user.getByOpenid': 'UserInfoView',
   'user.getSubUser': 'UserSubView',
@@ -152,6 +158,9 @@ function emitApi(domain, ns, entries) {
 }
 
 function main() {
+  const existingIndex = fs.existsSync(path.join(APIS_DIR, 'index.ts'))
+    ? fs.readFileSync(path.join(APIS_DIR, 'index.ts'), 'utf8')
+    : ''
   // superone 消费到的域。没有手写 types/<domain>.ts 的域会被 genOne 自动跳过
   // （避免生成引用不存在命名空间的代码），所以列表可以大方写全。
   const files = [
@@ -165,6 +174,7 @@ function main() {
     'wechat_api.yaml',
     'skill_api.yaml',
     'organization_api.yaml',
+    'gknow_wheel_api.yaml',
   ]
   const apiExports = []
   for (const f of files) {
@@ -178,6 +188,12 @@ function main() {
   for (const { domain } of apiExports) {
     L.push(`export { ${ident(domain)}ApiPaths, create${ident(domain)}Api } from './${domain}'`)
   }
+  const generatedDomains = new Set(apiExports.map(({ domain }) => domain))
+  const supplementalExports = existingIndex.split('\n').filter((line) => {
+    const match = line.match(/from '\.\/([^']+)'/)
+    return match && !generatedDomains.has(match[1])
+  })
+  if (supplementalExports.length) L.push('', ...supplementalExports)
   L.push('')
   fs.writeFileSync(path.join(APIS_DIR, 'index.ts'), L.join('\n'))
   console.log(

@@ -1,0 +1,476 @@
+openapi: 3.0.3
+info:
+  title: 鹅懂个啥大转盘配置 API
+  version: 1.0.0
+security:
+  - bearerAuth: []
+paths:
+  /api/so/gknow/wheel/list:
+    post:
+      operationId: getList
+      summary: 获取系统转盘摘要列表
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetListReq'
+      responses:
+        '200':
+          description: 转盘摘要列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetListResp'
+  /api/so/gknow/wheel/detail:
+    get:
+      operationId: getDetail
+      summary: 获取系统转盘详情及候选项
+      parameters:
+        - name: wheel_key
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 转盘及候选项详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDetailResp'
+  /api/so/gknow/wheel/option/search:
+    post:
+      operationId: searchOptions
+      summary: 按城市、标签等条件分页查询转盘候选项
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchOptionsReq'
+      responses:
+        '200':
+          description: 符合条件的候选项
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchOptionsResp'
+  /api/so/gknow/wheel/option/upsert:
+    post:
+      operationId: upsertOption
+      summary: 新增或更新单个候选项
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertOptionReq'
+      responses:
+        '200':
+          description: 更新后的 wheel 版本
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WriteResp'
+  /api/so/gknow/wheel/option/delete:
+    post:
+      operationId: deleteOption
+      summary: 删除单个候选项
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteOptionReq'
+      responses:
+        '200':
+          description: 更新后的 wheel 版本
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WriteResp'
+  /api/so/gknow/wheel/option/batch:
+    post:
+      operationId: batchOptions
+      summary: 在一个事务中批量新增、更新和删除候选项
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchOptionsReq'
+      responses:
+        '200':
+          description: 更新后的 wheel 版本
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WriteResp'
+  /api/so/gknow/wheel/create:
+    post:
+      operationId: create
+      summary: 管理员创建转盘草稿
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReq'
+      responses:
+        '200':
+          description: 创建草稿
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WriteResp'
+  /api/so/gknow/wheel/update:
+    post:
+      operationId: update
+      summary: 管理员更新配置、候选项或发布状态
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReq'
+      responses:
+        '200':
+          description: 更新配置或发布状态
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WriteResp'
+  /api/so/gknow/wheel/delete:
+    post:
+      operationId: delete
+      summary: 管理员物理删除转盘与选项
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteReq'
+      responses:
+        '200':
+          description: 物理删除转盘及选项
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WriteResp'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    GetListReq:
+      type: object
+      properties:
+        offset:
+          type: integer
+          minimum: 0
+          default: 0
+        size:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        include_unpublished:
+          type: boolean
+          description: 仅 Gknow 管理员可请求草稿和下架配置
+    GetListResp:
+      type: object
+      required: [total, list]
+      properties:
+        total:
+          type: integer
+          format: int64
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/WheelSummary'
+    WheelSummary:
+      type: object
+      required:
+        - wheel_key
+        - title
+        - summary
+        - icon_url
+        - display_order
+        - wheel_status
+        - option_mode
+        - option_total
+        - content_version
+      properties:
+        wheel_key:
+          type: string
+        title:
+          type: string
+        summary:
+          type: string
+        icon_url:
+          type: string
+          format: uri
+        display_order:
+          type: integer
+        wheel_status:
+          type: integer
+          enum: [0, 1]
+          description: 0 草稿或下架，1 已发布
+        option_mode:
+          type: integer
+          enum: [0, 1]
+          description: 0 直接加载，1 先筛选再查询
+        option_total:
+          type: integer
+          format: int64
+        content_version:
+          type: integer
+          minimum: 1
+    GetDetailReq:
+      type: object
+      required: [wheel_key]
+      properties:
+        wheel_key:
+          type: string
+          maxLength: 64
+    GetDetailResp:
+      type: object
+      required:
+        - wheel_key
+        - wheel_status
+        - content_version
+        - option_mode
+        - option_total
+        - content_json
+        - options
+        - filter_dimensions
+      properties:
+        wheel_key:
+          type: string
+        wheel_status:
+          type: integer
+          enum: [0, 1]
+        content_version:
+          type: integer
+          minimum: 1
+        option_mode:
+          type: integer
+          enum: [0, 1]
+        option_total:
+          type: integer
+          format: int64
+        content_json:
+          type: string
+          description: 转盘文案及筛选维度定义 JSON
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/WheelOption'
+        filter_dimensions:
+          type: array
+          items:
+            $ref: '#/components/schemas/FilterDimension'
+    WheelOption:
+      type: object
+      required: [id, name, tags, display_order]
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        tags:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: 维度 key 到标签数组的映射
+        display_order:
+          type: integer
+        recommendation_score:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: 推荐指数，未设置按 0 排序
+    SearchOptionsReq:
+      type: object
+      required: [wheel_key, filters]
+      properties:
+        wheel_key:
+          type: string
+          maxLength: 64
+        filters:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: 维度 key 到已选标签的映射；维度内 OR，维度间 AND
+        sort_mode:
+          type: string
+          enum: [recommended, random]
+          default: recommended
+          description: 推荐指数降序或每次随机抽样；随机模式忽略 offset
+        offset:
+          type: integer
+          minimum: 0
+          default: 0
+        size:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 30
+    SearchOptionsResp:
+      type: object
+      required: [total, options]
+      properties:
+        total:
+          type: integer
+          format: int64
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/WheelOption'
+    UpsertOptionReq:
+      type: object
+      required: [wheel_key, expected_version, option_id, option]
+      properties:
+        wheel_key:
+          type: string
+          maxLength: 64
+        expected_version:
+          type: integer
+          minimum: 1
+        option_id:
+          type: string
+          maxLength: 96
+        option:
+          $ref: '#/components/schemas/WheelOption'
+    DeleteOptionReq:
+      type: object
+      required: [wheel_key, expected_version, option_id]
+      properties:
+        wheel_key:
+          type: string
+          maxLength: 64
+        expected_version:
+          type: integer
+          minimum: 1
+        option_id:
+          type: string
+          maxLength: 96
+    BatchOptionsReq:
+      type: object
+      required: [wheel_key, expected_version]
+      properties:
+        wheel_key:
+          type: string
+          maxLength: 64
+        expected_version:
+          type: integer
+          minimum: 1
+        upsert_options:
+          type: array
+          items:
+            $ref: '#/components/schemas/WheelOption'
+        delete_option_ids:
+          type: array
+          items:
+            type: string
+    FilterDimension:
+      type: object
+      required: [key, title, values]
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+        selection:
+          type: string
+          enum: [single, multiple]
+          default: multiple
+          description: 同一维度可选一个或多个标签
+        values:
+          type: array
+          items:
+            type: string
+    CreateReq:
+      type: object
+      required: [wheel_key, title, content_json]
+      properties:
+        wheel_key:
+          type: string
+          maxLength: 64
+          pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+        title:
+          type: string
+          maxLength: 128
+        summary:
+          type: string
+          maxLength: 512
+        icon_url:
+          type: string
+          maxLength: 1024
+        display_order:
+          type: integer
+        option_mode:
+          type: integer
+          enum: [0, 1]
+        content_json:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/WheelOption'
+    UpdateReq:
+      type: object
+      required: [wheel_key, expected_version]
+      properties:
+        wheel_key:
+          type: string
+          maxLength: 64
+        expected_version:
+          type: integer
+          minimum: 1
+        title:
+          type: string
+          maxLength: 128
+        summary:
+          type: string
+          maxLength: 512
+        icon_url:
+          type: string
+          maxLength: 1024
+        display_order:
+          type: integer
+        option_mode:
+          type: integer
+          enum: [0, 1]
+        content_json:
+          type: string
+        wheel_status:
+          type: integer
+          enum: [0, 1]
+    DeleteReq:
+      type: object
+      required: [wheel_key, expected_version]
+      properties:
+        wheel_key:
+          type: string
+          maxLength: 64
+        expected_version:
+          type: integer
+          minimum: 1
+    WriteResp:
+      type: object
+      required: [wheel_key, content_version]
+      properties:
+        wheel_key:
+          type: string
+        content_version:
+          type: integer
+          minimum: 1

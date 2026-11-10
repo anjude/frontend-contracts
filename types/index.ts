@@ -18,3 +18,4 @@ export * from './assessment'
 export * from './analytics'
 
 export * from './story'
+export * from './gknow-wheel'
